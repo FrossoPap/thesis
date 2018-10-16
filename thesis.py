@@ -6,18 +6,13 @@ from scipy import *
 import sparse
 from sktensor.rescal import als as rescal_als
 from scipy.spatial import distance
-
-
+from sklearn.model_selection import TimeSeriesSplit
 
 # Create Post-User and User-User arrays
 post = np.loadtxt( 'PolitiFactNewsUser.txt' )
 user = np.loadtxt('PolitiFactUserUser.txt')
 post = post.astype(int)
 user = user.astype(int)
-
-
-# In[34]:
-
 
 # Create u x u array  with the follower - followee scheme 
 total = np.zeros((23865,23865), dtype=int)
@@ -26,12 +21,6 @@ for i in range(574744):
     u2 = user[i,1] - 1
     # user u2 is followed by u1
     total[u2,u1] = 1 
-
-
-
-
-# In[35]:
-
 
 # Number of users 
 nu = 23865
@@ -45,7 +34,6 @@ for i in range(120):
     faketnsr.append(A)
     realtnsr.append(B)
 
-
 # Create Fake and Real tensors from the follower-folowee scheme
 k=0
 # Rows of Post array
@@ -58,7 +46,6 @@ for i in range(rows):
         faketnsr[p-121][u-1][:]=total[u-1][:]
     else:
         realtnsr[p-1][u-1][:]=total[u-1][:]
-
 
 # Load sorted by date fake & real posts created in mergefake.py & mergereal.py
 sortedfake = np.loadtxt('sortedfakeposts.txt')
@@ -106,8 +93,6 @@ A4 = np.asarray(A4)
 faketraintnsr=[]
 faketesttnsr=[]
 realtraintnsr=[]
-
-from sklearn.model_selection import TimeSeriesSplit
 y=[]
 X = sortedfaketnsr
 for i in range(120):
