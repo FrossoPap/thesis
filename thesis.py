@@ -78,26 +78,7 @@ for i in range(120):
     D = csr_matrix(sortedrealtnsr[i])
     T2.append(D)
 
-R1 = []
-R2 = []
-R3 = []
-R4 = []
-A1 = []
-A1 = np.asarray(A1)
-A2 = []
-A2 = np.asarray(A2)
-A3 = []
-A3 = np.asarray(A3)
-A4 = []
-A4 = np.asarray(A4)
-faketraintnsr=[]
-faketesttnsr=[]
-realtraintnsr=[]
-y=[]
 X = sortedfaketnsr
-for i in range(120):
-    y.append(i)
-y = np.asarray(y)
 tscv = TimeSeriesSplit(n_splits=119)
 print(tscv)  
 TimeSeriesSplit(max_train_size=None, n_splits=119)
