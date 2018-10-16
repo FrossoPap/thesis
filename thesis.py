@@ -123,33 +123,33 @@ for train_index, test_index in tscv.split(X):
     dist1 = 0
     dist2 = 0
     print("TRAIN:", train_index, "TEST:", test_index)
-    if (len(train_index)>50):
-        for i in range(len(train_index)):
-            addftrainpost = T1[train_index[i]]
-            addrtrainpost = T2[train_index[i]]
-            faketraintnsr.append(addftrainpost)
-            realtraintnsr.append(addrtrainpost)
-            faketesttnsr.append(addftrainpost)
-            realtesttnsr.append(addrtrainpost)
-        addtestpost = T1[test_index[0]]
-        faketesttnsr.append(addtestpost)
-        realtesttnsr.append(addtestpost)
+ 
+    for i in range(len(train_index)):
+        addftrainpost = T1[train_index[i]]
+        addrtrainpost = T2[train_index[i]]
+        faketraintnsr.append(addftrainpost)
+        realtraintnsr.append(addrtrainpost)
+        faketesttnsr.append(addftrainpost)
+        realtesttnsr.append(addrtrainpost)
+    addtestpost = T1[test_index[0]]
+    faketesttnsr.append(addtestpost)
+    realtesttnsr.append(addtestpost)
 
-        A1, R1, _, _, _ = rescal_als(faketraintnsr, 5, lambda_A=10, lambda_R=10) # fake only
-        A2, R2, _, _, _ = rescal_als(realtraintnsr, 5, lambda_A=10, lambda_R=10) # real only 
-        A3, R3, _, _, _ = rescal_als(faketesttnsr, 5, lambda_A=10, lambda_R=10) # fake-fake
-        A4, R4, _, _, _ = rescal_als(realtesttnsr, 5, lambda_A=10, lambda_R=10) # real-fake
-        # Flatten arrays
-        Aflat = np.hstack(A1) #faketensor
-        Bflat = np.hstack(A2) #realtensor
-        Cflat = np.hstack(A3) #fake-fake
-        Dflat = np.hstack(A4) #real-fake
-        dist1 = distance.cosine(Aflat, Cflat)
-        dist2 = distance.cosine(Bflat, Dflat)
-        result1 = np.linalg.norm(Aflat-Cflat)
-        result2 = np.linalg.norm(Bflat-Dflat)
-        print("Distance between fake A1 and fake-fake A3 is:", dist1, "or", result1)
-        print("Distance between real A2 and real-fake A4 is:", dist2, "or", result2)
+    A1, R1, _, _, _ = rescal_als(faketraintnsr, 5, lambda_A=10, lambda_R=10) # fake only
+    A2, R2, _, _, _ = rescal_als(realtraintnsr, 5, lambda_A=10, lambda_R=10) # real only 
+    A3, R3, _, _, _ = rescal_als(faketesttnsr, 5, lambda_A=10, lambda_R=10) # fake-fake
+    A4, R4, _, _, _ = rescal_als(realtesttnsr, 5, lambda_A=10, lambda_R=10) # real-fake
+    # Flatten arrays
+    Aflat = np.hstack(A1) #faketensor
+    Bflat = np.hstack(A2) #realtensor
+    Cflat = np.hstack(A3) #fake-fake
+    Dflat = np.hstack(A4) #real-fake
+    dist1 = distance.cosine(Aflat, Cflat)
+    dist2 = distance.cosine(Bflat, Dflat)
+    result1 = np.linalg.norm(Aflat-Cflat)
+    result2 = np.linalg.norm(Bflat-Dflat)
+    print("Distance between fake A1 and fake-fake A3 is:", dist1, "or", result1)
+    print("Distance between real A2 and real-fake A4 is:", dist2, "or", result2)
 
 
 
