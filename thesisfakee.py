@@ -743,11 +743,11 @@ T1 = np.array(T1).tolist()
 T2 = np.array(T2).tolist()
 
 print('Begin decomposing with Rescal..')
-result=[]
+resultfake=[]
 
 for j in range(10):
     k1 = 0 
-    result.append(0)
+    resultfake.append(0)
     print('Iteration:',j)
     X = sortedfaketnsr
     tscv = TimeSeriesSplit(n_splits=119)
@@ -787,7 +787,7 @@ for j in range(10):
             print('Len fake traintnsr:', len(faketraintnsr))
             for j in range(20):
                    print('Test Post:', test_index[0] + j)
-                   addtestpost = T2[test_index[0]+j]
+                   addtestpost = T1[test_index[0]+j]
                   # print('1stprint:',addtestpost)
                    faketesttnsr.append(addtestpost)
                   # print('2ndprint:',faketesttnsr[len(faketesttnsr)-1])
@@ -832,11 +832,13 @@ for j in range(10):
                    result2 = np.linalg.norm(A2-A4)
                    print("Distance between fake A1 and fake-fake A3 is:", result1, "in norm")
                    print("Distance between real A2 and real-fake A4 is:", result2)
-                   if result1>result2:
+                   if result1<result2:
                       print('Prediction was correct')
                       k1 = k1 + 1
+                      print(k1*100/(j+1))
                    else:
                       print('Prediction was wrong')
-    result.append(k1*100/(j+1))
-    np.savetxt('result.txt',result)
+    resultfake.append(k1*100/(j+1))
+    np.savetxt('resultfake.txt',resultfake)
+print('Prediction accuracy is',  k1*100(j+1), '%')           
 # END
