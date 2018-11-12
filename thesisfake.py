@@ -20,6 +20,7 @@ from numpy.random import rand
 from sklearn.decomposition.nmf import _initialize_nmf
 from sklearn.metrics import accuracy_score
 
+# Beginning of non negative rescal
 __version__ = "0.1"
 __all__ = ['nonneg_rescal']
 
@@ -632,7 +633,6 @@ def __log(X):
     X.data = np.log(X.data)
     return X.tocsr()
 
-
 # if __name__ == '__main__':
 #     """Simple Test if the the code is running"""
 #     X = [csr_matrix(np.random.randint(0, 2, size=(10, 10)).astype(np.float32))
@@ -643,121 +643,123 @@ def __log(X):
 #     nonneg_rescal(X, 3, verbose=True, costF='KL')
 #     nonneg_rescal(X, 3, verbose=True, costF='MUL')
 #     nonneg_rescal(X, 3, verbose=True, lambda_A=0.01, lambda_R=0.01)
+# End of nonnegative rescal
 
-
+# Beginning of my own code
 print('Creating Post-User and User-User arrays..')
 post = np.loadtxt( 'PolitiFactNewsUser.txt' )
 user = np.loadtxt('PolitiFactUserUser.txt')
 post = post.astype(int)
 user = user.astype(int)
 
-#print('Counting number of users with more than one interaction..')
-#flag = 0
-#u = 0 
-#musers = []
-#for i in range(32790):
-#    if (post[i,1]==post[i+1,1]):
-#      if flag==0:
-#        u = u + 1
-#        musers.append(post[i,1])
-#      flag = flag + 1
-#    else:
-#      flag=0  
+print('Counting number of users with more than one interaction..')
+flag = 0
+u = 0 
+musers = []
+for i in range(32790):
+    if (post[i,1]==post[i+1,1]):
+      if flag==0:
+        u = u + 1
+        musers.append(post[i,1])
+        flag = flag + 1
+    else:
+      flag=0  
     
-#print('Number of users is:', u)
+print('Number of users is:', u)
 
-#print('Create',u,'x',u,'array with the follower-followee scheme..') 
-#total = np.zeros((u,u), dtype=int)
-#for i in range(574744):
-#    u1 = user[i,0]
-#    u2 = user[i,1]
-#    if u2 in musers:
-#      if u1 in musers:
-#        indx1 = musers.index(u1)
-#       indx2 = musers.index(u2)
+print('Create',u,'x',u,'array with the follower-followee scheme..') 
+total = np.zeros((u,u), dtype=int)
+for i in range(574744):
+    u1 = user[i,0]
+    u2 = user[i,1]
+    if u2 in musers:
+      if u1 in musers:
+        indx1 = musers.index(u1)
+        indx2 = musers.index(u2)
         # user u2 is followed by u1
-#        total[indx2,indx1] = 1 
+        total[indx2,indx1] = 1 
 
 # Number of valid users 
-#nu = u
-#print('Initializing list of arrays, 120 in total, empty adjacency matrixes..')
-#faketnsr = []
-#realtnsr = []
-#for i in range(120):
+nu = u
+print('Initializing list of arrays, 120 in total, empty adjacency matrixes..')
+faketnsr = []
+realtnsr = []
+for i in range(120):
     # Constructing an empty sparse matrix u x u 
-#    A = coo_matrix((nu, nu), dtype=np.int8).toarray()
-#    B = coo_matrix((nu, nu), dtype=np.int8).toarray()
-#    faketnsr.append(A)
-#   realtnsr.append(B)
+    A = coo_matrix((nu, nu), dtype=np.int8).toarray()
+    B = coo_matrix((nu, nu), dtype=np.int8).toarray()
+    faketnsr.append(A)
+    realtnsr.append(B)
 
-#print('Creating Fake and Real tensors from the follower-folowee scheme..')
+print('Creating Fake and Real tensors from the follower-folowee scheme..')
 # Rows of Post array
-#rows=32791
-#for i in range(rows):
-#    u=post[i,1] # u = User id
-#    p=post[i,0] # p = Post id
-#    if u in musers:
-#       indx = musers.index(u)
-#       if (p>120):      
+rows = 32791
+for i in range(rows):
+    u = post[i,1] # u = User id
+    p = post[i,0] # p = Post id
+    if u in musers:
+       indx = musers.index(u)
+       if (p>120):      
           # i is followed by j 
-#          faketnsr[p-121][indx][:]=total[indx][:]
-#       else:
-#          realtnsr[p-1][indx][:]=total[indx][:]
+          faketnsr[p-121][indx][:] = total[indx][:]
+       else:
+          realtnsr[p-1][indx][:] = total[indx][:]
        
-#print('Loading sorted by date fake & real posts created in mergefake.py & mergereal.py..')
-#sortedfake = np.loadtxt('sortedfakeposts.txt')
-#sortedfake = sortedfake.astype(int)
-#sortedreal = np.loadtxt('sortedrealposts.txt')
-#sortedreal = sortedreal.astype(int)
+print('Loading sorted by date fake & real posts created in mergefake.py & mergereal.py..')
+sortedfake = np.loadtxt('sortedfakeposts.txt')
+sortedfake = sortedfake.astype(int)
+sortedreal = np.loadtxt('sortedrealposts.txt')
+sortedreal = sortedreal.astype(int)
 
-#print('Sorting tensors by date according to sortedfake & sortedreal arrays..')
-#sortedfaketnsr=[]
-#for i in range(120):
-#    sortedfaketnsr.append(faketnsr[sortedfake[i]-1])
-#sortedrealtnsr=[]
-#for i in range(120):
-#    sortedrealtnsr.append(realtnsr[sortedreal[i]-1])
+print('Sorting tensors by date according to sortedfake & sortedreal arrays..')
+sortedfaketnsr=[]
+for i in range(120):
+    sortedfaketnsr.append(faketnsr[sortedfake[i]-1])
+sortedrealtnsr=[]
+for i in range(120):
+    sortedrealtnsr.append(realtnsr[sortedreal[i]-1])
 
-#np.save('sortedfaketnsr',sortedfaketnsr)
-#np.save('sortedrealtnsr',sortedrealtnsr)
+np.save('sortedfaketnsr',sortedfaketnsr)
+np.save('sortedrealtnsr',sortedrealtnsr)
 
-sortedfaketnsr = np.load('sortedfaketnsr.npy')
-sortedrealtnsr = np.load('sortedrealtnsr.npy')
-#print('Constructing 119 x u x u sparse tensor with the first 119 fakes in order to apply Rescal..')
-#T1 is my training set
-#T1 = []
-#for i in range(120):
-    # Constructing an empty sparse matrix u x u 
-     #C = csr_matrix(sortedfaketnsr[i])
-     #T1.append(C)
-#     print(i)
+#sortedfaketnsr = np.load('sortedfaketnsr.npy')
+#sortedrealtnsr = np.load('sortedrealtnsr.npy')
 
-#print('Constructing 119 x u x u sparse tensor with the first 119 real in order to apply Rescal..')
-#T2 = []
-#for i in range(120):
-    # Constructing an empty sparse matrix u x u 
-   #D = csr_matrix(sortedrealtnsr[i])
-   #T2.append(D)
-   #print(i)
+print('Constructing 119 x u x u sparse tensor with the first 119 fakes in order to apply Rescal..')
+# T1 is my training set
+T1 = []
+for i in range(120):
+   # Constructing an empty sparse matrix u x u 
+   C = csr_matrix(sortedfaketnsr[i])
+   T1.append(C)
+   print(i)
+
+print('Constructing 119 x u x u sparse tensor with the first 119 real in order to apply Rescal..')
+T2 = []
+for i in range(120):
+   # Constructing an empty sparse matrix u x u 
+   D = csr_matrix(sortedrealtnsr[i])
+   T2.append(D)
+   print(i)
 
 print('Loading results..')
-#np.save('T1', T1)
-T1 = np.load('T1.npy')
-#np.save('T2', T2)
-T2 = np.load('T2.npy')
+np.save('T1', T1)
+#T1 = np.load('T1.npy')
+np.save('T2', T2)
+#T2 = np.load('T2.npy')
 T1 = np.array(T1).tolist()
 T2 = np.array(T2).tolist()
-#0 means it is real
+# 0 means it is real
 y_true = np.ones(120)
 y_pred = np.zeros(120)
 print('Begin decomposing with Rescal..')
 resultff=[]
 
+# Change range to perform the same experiment many times
 for j in range(1):
     y_true = np.zeros(120)
     y_pred = np.ones(120)
     k1 = 0 
-    #resultf.append(0)
     #print('Iteration:',j)
     X = sortedfaketnsr
     tscv = TimeSeriesSplit(n_splits=119)
@@ -799,33 +801,24 @@ for j in range(1):
             for j in range(95):
                    print('Test Post:', test_index[0] + j)
                    addtestpost = T1[test_index[0]+j]
-                   #print('1stprint:',addtestpost)
                    faketesttnsr.append(addtestpost)
-                   #print('2ndprint:',faketesttnsr[len(faketesttnsr)-1])
                    realtesttnsr.append(addtestpost)
-                   #print('Fake test tnsr len:', len(faketesttnsr))
-                   #print('Fake train tnsr len:', len(faketraintnsr))
-                   A1, R1, _, _, _ = nonneg_rescal(faketraintnsr, 40, lambda_A=0.01, lambda_R=0.01)
+                   print('akee test tnsr len:', len(faketesttnsr))
+                   print('Fake train tnsr len:', len(faketraintnsr))
+                   A1, R1, _, _, _ = nonneg_rescal(faketraintnsr, 40, lambda_A=0.01, lambda_R=0.01) 
                    print('end of 1st Rescal')
-                   A2, R2, _, _, _ = nonneg_rescal(realtraintnsr, 40, lambda_A=0.01, lambda_R=0.01) # real only
+                   A2, R2, _, _, _ = nonneg_rescal(realtraintnsr, 40, lambda_A=0.01, lambda_R=0.01) 
                    print('end of 2nd Rescal')
-                   A3, R3, _, _, _ = nonneg_rescal(faketesttnsr, 40, lambda_A=0.01, lambda_R=0.01) # fake-fake
+                   A3, R3, _, _, _ = nonneg_rescal(faketesttnsr, 40, lambda_A=0.01, lambda_R=0.01)
                    print('end of 3rd Rescal')
-                   A4, R4, _, _, _ = nonneg_rescal(realtesttnsr, 40, lambda_A=0.01, lambda_R=0.01) # real-fake
+                   A4, R4, _, _, _ = nonneg_rescal(realtesttnsr, 40, lambda_A=0.01, lambda_R=0.01)
                    print('end of 4th Rescal')
-	           # Flatten arrays
                    faketesttnsr.pop(len(faketesttnsr)-1)
                    realtesttnsr.pop(len(realtesttnsr)-1)
-                   #Aflat = np.hstack(A1) #faketensor
-                   #Bflat = np.hstack(A2) #realtensor
-                   #Cflat = np.hstack(A3) #fake-fake
-                   #Dflat = np.hstack(A4) #real-fake
-                   #dist1 = distance.cosine(Aflat, Cflat)
-                   #dist2 = distance.cosine(Bflat, Dflat)
                    result1 = np.linalg.norm(A1-A3)
                    result2 = np.linalg.norm(A2-A4)
-                   #print("Distance between fake A1 and fake-fake A3 is:", result1, "in norm")
-                   #print("Distance between real A2 and real-fake A4 is:", result2)
+                   print("Distance between fake A1 and fake-fake A3 is:", result1, "in norm")
+                   print("Distance between real A2 and real-fake A4 is:", result2)
                    if result1<result2:
                       print('Prediction was correct')
                       y_pred[test_index[0]+j] = 1
