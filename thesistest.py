@@ -655,103 +655,104 @@ user = np.loadtxt('PolitiFactUserUser.txt')
 post = post.astype(int)
 user = user.astype(int)
 
-#print('Counting number of users with more than one interaction..')
-#flag = 0
-#u = 0 
-#musers = []
-#for i in range(32790):
-#    if (post[i,1]==post[i+1,1]):
-#      if flag==0:
-#        u = u + 1
-#        musers.append(post[i,1])
-#      flag = flag + 1
-#    else:
-#      flag=0  
+print('Counting number of users with more than one interaction..')
+flag = 0
+u = 0 
+musers = []
+for i in range(32790):
+    if (post[i,1]==post[i+1,1]):
+      if flag==0:
+        u = u + 1
+        musers.append(post[i,1])
+      flag = flag + 1
+    else:
+      flag=0  
     
-#print('Number of users is:', u)
+print('Number of users is:', u)
 
-#print('Create',u,'x',u,'array with the follower-followee scheme..') 
-#total = np.zeros((u,u), dtype=int)
-#for i in range(574744):
-#    u1 = user[i,0]
-#    u2 = user[i,1]
-#    if u2 in musers:
-#      if u1 in musers:
-#        indx1 = musers.index(u1)
-#       indx2 = musers.index(u2)
+print('Create',u,'x',u,'array with the follower-followee scheme..') 
+total = np.zeros((u,u), dtype=int)
+for i in range(574744):
+    u1 = user[i,0]
+    u2 = user[i,1]
+    if u2 in musers:
+      if u1 in musers:
+        indx1 = musers.index(u1)
+        indx2 = musers.index(u2)
         # user u2 is followed by u1
-#        total[indx2,indx1] = 1 
+        total[indx2,indx1] = 1 
 
 # Number of valid users 
-#nu = u
-#print('Initializing list of arrays, 120 in total, empty adjacency matrixes..')
-#faketnsr = []
-#realtnsr = []
-#for i in range(120):
+nu = u
+print('Initializing list of arrays, 120 in total, empty adjacency matrixes..')
+faketnsr = []
+realtnsr = []
+for i in range(120):
     # Constructing an empty sparse matrix u x u 
-#    A = coo_matrix((nu, nu), dtype=np.int8).toarray()
-#    B = coo_matrix((nu, nu), dtype=np.int8).toarray()
-#    faketnsr.append(A)
-#   realtnsr.append(B)
+    A = coo_matrix((nu, nu), dtype=np.int8).toarray()
+    B = coo_matrix((nu, nu), dtype=np.int8).toarray()
+    faketnsr.append(A)
+    realtnsr.append(B)
 
-#print('Creating Fake and Real tensors from the follower-folowee scheme..')
+print('Creating Fake and Real tensors from the follower-folowee scheme..')
 # Rows of Post array
-#rows=32791
-#for i in range(rows):
-#    u=post[i,1] # u = User id
-#    p=post[i,0] # p = Post id
-#    if u in musers:
-#       indx = musers.index(u)
-#       if (p>120):      
+rows=32791
+for i in range(rows):
+    u=post[i,1] # u = User id
+    p=post[i,0] # p = Post id
+    if u in musers:
+       indx = musers.index(u)
+       if (p>120):      
           # i is followed by j 
-#          faketnsr[p-121][indx][:]=total[indx][:]
-#       else:
-#          realtnsr[p-1][indx][:]=total[indx][:]
+          faketnsr[p-121][indx][:]=total[indx][:]
+       else:
+          realtnsr[p-1][indx][:]=total[indx][:]
        
-#print('Loading sorted by date fake & real posts created in mergefake.py & mergereal.py..')
-#sortedfake = np.loadtxt('sortedfakeposts.txt')
-#sortedfake = sortedfake.astype(int)
-#sortedreal = np.loadtxt('sortedrealposts.txt')
-#sortedreal = sortedreal.astype(int)
+print('Loading sorted by date fake & real posts created in mergefake.py & mergereal.py..')
+sortedfake = np.loadtxt('sortedfakeposts.txt')
+sortedfake = sortedfake.astype(int)
+sortedreal = np.loadtxt('sortedrealposts.txt')
+sortedreal = sortedreal.astype(int)
 
-#print('Sorting tensors by date according to sortedfake & sortedreal arrays..')
-#sortedfaketnsr=[]
-#for i in range(120):
-#    sortedfaketnsr.append(faketnsr[sortedfake[i]-1])
-#sortedrealtnsr=[]
-#for i in range(120):
-#    sortedrealtnsr.append(realtnsr[sortedreal[i]-1])
+print('Sorting tensors by date according to sortedfake & sortedreal arrays..')
+sortedfaketnsr=[]
+for i in range(120):
+    sortedfaketnsr.append(faketnsr[sortedfake[i]-1])
 
-#np.save('sortedfaketnsr',sortedfaketnsr)
-#np.save('sortedrealtnsr',sortedrealtnsr)
+sortedrealtnsr=[]
+for i in range(120):
+    sortedrealtnsr.append(realtnsr[sortedreal[i]-1])
 
-sortedfaketnsr = np.load('sortedfaketnsr.npy')
-sortedrealtnsr = np.load('sortedrealtnsr.npy')
-#print('Constructing 119 x u x u sparse tensor with the first 119 fakes in order to apply Rescal..')
-#T1 is my training set
-#T1 = []
-#for i in range(120):
+np.save('sortedfaketnsr',sortedfaketnsr)
+np.save('sortedrealtnsr',sortedrealtnsr)
+
+#sortedfaketnsr = np.load('sortedfaketnsr.npy')
+#sortedrealtnsr = np.load('sortedrealtnsr.npy')
+print('Constructing 119 x u x u sparse tensor with the first 119 fakes in order to apply Rescal..')
+# T1 is my training set
+T1 = []
+for i in range(120):
     # Constructing an empty sparse matrix u x u 
-     #C = csr_matrix(sortedfaketnsr[i])
-     #T1.append(C)
+     C = csr_matrix(sortedfaketnsr[i])
+     T1.append(C)
 #     print(i)
 
-#print('Constructing 119 x u x u sparse tensor with the first 119 real in order to apply Rescal..')
-#T2 = []
-#for i in range(120):
+print('Constructing 119 x u x u sparse tensor with the first 119 real in order to apply Rescal..')
+T2 = []
+for i in range(120):
     # Constructing an empty sparse matrix u x u 
-   #D = csr_matrix(sortedrealtnsr[i])
-   #T2.append(D)
-   #print(i)
+   D = csr_matrix(sortedrealtnsr[i])
+   T2.append(D)
+#   print(i)
 
 print('Loading results..')
-#np.save('T1', T1)
-T1 = np.load('T1.npy')
-#np.save('T2', T2)
-T2 = np.load('T2.npy')
+np.save('T1', T1)
+#T1 = np.load('T1.npy')
+np.save('T2', T2)
+#T2 = np.load('T2.npy')
 T1 = np.array(T1).tolist()
 T2 = np.array(T2).tolist()
-#0 means it is real
+# 0 means it is real
 print('Begin decomposing with Rescal..')
 resultt=[]
 
