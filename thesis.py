@@ -806,8 +806,10 @@ for i in range(s):
     #print('Len fake traintnsr:', len(faketraintnsr))
 
 # Compute Rescal for Fake & Real Train Tensors without the test post
-A1, R1, _, _, _ = nonneg_rescal(faketraintnsr, 20, lambda_A=1, lambda_R=1, lambda_V=1)
-A2, R2, _, _, _ = nonneg_rescal(realtraintnsr, 20, lambda_A=1, lambda_R=1, lambda_V=1) # real only
+rnk = 20
+print ('Rank is', rnk)
+A1, R1, _, _, _ = nonneg_rescal(faketraintnsr, rnk, lambda_A=1, lambda_R=1, lambda_V=1)
+A2, R2, _, _, _ = nonneg_rescal(realtraintnsr, rnk, lambda_A=1, lambda_R=1, lambda_V=1) # real only
 
 # Add test posts in Fake & Real Train Tensors, First For Real
 for i in range(r):
@@ -817,8 +819,8 @@ for i in range(r):
     realtesttnsr.append(addtestpost)
     print('Fake test tnsr len:', len(faketesttnsr))
     print('Fake train tnsr len:', len(faketraintnsr))
-    A3, R3, _, _, _ = nonneg_rescal(faketesttnsr, 20, lambda_A=1, lambda_R=1, lambda_V=1) # fake-fake
-    A4, R4, _, _, _ = nonneg_rescal(realtesttnsr, 20, lambda_A=1, lambda_R=1, lambda_V=1) # real-fake
+    A3, R3, _, _, _ = nonneg_rescal(faketesttnsr, rnk, lambda_A=1, lambda_R=1, lambda_V=1) # fake-fake
+    A4, R4, _, _, _ = nonneg_rescal(realtesttnsr, rnk, lambda_A=1, lambda_R=1, lambda_V=1) # real-fake
     # Remove last element in order to add the new Test post
     faketesttnsr.pop(len(faketesttnsr)-1)
     realtesttnsr.pop(len(realtesttnsr)-1)
@@ -836,11 +838,11 @@ for i in range(r):
 # Same for Fake train set      
 for j in range(r):
      print('Fake Test Post:', s+i)
-     addtestpost = T1[test_index[0]+j]
+     addtestpost = T1[s+i]
      faketesttnsr.append(addtestpost)
      realtesttnsr.append(addtestpost)
-     A3, R3, _, _, _ = nonneg_rescal(faketesttnsr, 20, lambda_A=1, lambda_R=1, lambda_V=1)
-     A4, R4, _, _, _ = nonneg_rescal(realtesttnsr, 20, lambda_A=1, lambda_R=1, lambda_V=1)
+     A3, R3, _, _, _ = nonneg_rescal(faketesttnsr, rnk, lambda_A=1, lambda_R=1, lambda_V=1)
+     A4, R4, _, _, _ = nonneg_rescal(realtesttnsr, rnk, lambda_A=1, lambda_R=1, lambda_V=1)
      faketesttnsr.pop(len(faketesttnsr)-1)
      realtesttnsr.pop(len(realtesttnsr)-1)
      result1 = np.linalg.norm(A1-A3)
