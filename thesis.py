@@ -212,9 +212,9 @@ for i in range(r):
        print('Test post is Fake (Prediction was wrong)')
        # 1 means it is fake
        y_pred.append(1)
-    # Remove last element in order to add the new Test post
-    faketesttnsr.pop(len(faketesttnsr)-1)
-    realtesttnsr.pop(len(realtesttnsr)-1)
+     # Remove last element in order to add the new Test post
+     faketesttnsr.pop(len(faketesttnsr)-1)
+     realtesttnsr.pop(len(realtesttnsr)-1)
 
 # Same for Fake Train Tensor      
 for j in range(r):
@@ -232,9 +232,9 @@ for j in range(r):
      else:
        print('Test post is Real (Prediction was wrong)')
        y_pred.append(0)
-    # Remove last element in order to add the new Test post
-    faketesttnsr.pop(len(faketesttnsr)-1)
-    realtesttnsr.pop(len(realtesttnsr)-1)
+     # Remove last element in order to add the new Test post
+     faketesttnsr.pop(len(faketesttnsr)-1)
+     realtesttnsr.pop(len(realtesttnsr)-1)
 
 # Compute scores 
 acc = accuracy_score(y_true, y_pred, normalize=False)
