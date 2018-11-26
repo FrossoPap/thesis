@@ -128,7 +128,7 @@ def nonneg_rescal(X, rank, **kwargs):
     if not len(kwargs) == 0:
         raise ValueError('Unknown keywords (%s)' % (kwargs.keys()))
 
-    for i in xrange(len(X)):
+    for i in range(len(X)):
         if not issparse(X[i]):
             raise ValueError('X[%d] is not a sparse matrix' % i)
 
@@ -141,7 +141,7 @@ def nonneg_rescal(X, rank, **kwargs):
     _log.debug('[Config] dtype: %s / %s' % (dtype, X[0].dtype))
 
     # ------- convert X to CSR ------------------------------------------------
-    for i in xrange(k):
+    for i in range(k):
         X[i] = X[i].tocsr()
         X[i].sort_indices()
 
@@ -151,15 +151,15 @@ def nonneg_rescal(X, rank, **kwargs):
     V = []
     if ainit == 'random':
         A = array(rand(n, rank), dtype=dtype)
-        for i in xrange(k):
+        for i in range(k):
             R.append(array(rand(rank, rank), dtype=dtype))
 
-        for i in xrange(len(D)):
+        for i in range(len(D)):
             V.append(array(rand(rank, D[i].shape[1]), dtype=dtype))
 
     elif ainit == 'nndsvd':
         S = csr_matrix((n, n), dtype=dtype)
-        for i in xrange(k):
+        for i in range(k):
             S = S + X[i]
             S = S + X[i].T
         A, W = _initialize_nmf(S, rank, 'nndsvd')
@@ -171,10 +171,10 @@ def nonneg_rescal(X, rank, **kwargs):
             W = np.array(W)
 
         Z = np.dot(A.T, W.T)
-        for i in xrange(k):
+        for i in range(k):
             R.append(Z)
 
-        for i in xrange(len(D)):
+        for i in range(len(D)):
             if rank > D[i].shape[1]:
                 V.append(array(rand(rank, D[i].shape[1]), dtype=dtype))
             else:
@@ -193,7 +193,7 @@ def nonneg_rescal(X, rank, **kwargs):
     if normalize:
         A = __normalize(A)
 
-    for iter in xrange(maxIter):
+    for iter in range(maxIter):
         tic = time.time()
 
         fitold = fit
@@ -259,7 +259,7 @@ def __LS_updateA(X, A, R, D, V, lmbdaA):
         dnominator = (dnominator + np.dot(ARt, np.dot(AtA, R[k])) +
                       np.dot(AR, np.dot(AtA, R[k].T)))
 
-    for i in xrange(len(D)):
+    for i in range(len(D)):
         nominator += D[i] * V[i].T
         dnominator += dot(A, dot(V[i], V[i].T))
 
@@ -288,7 +288,7 @@ def __LS_updateA_normalized(X, A, R, D, V, lmbdaA):
         dnominator = (dnominator + T2 +
                       dot(A, np.eye(r, r) * dot(np.ones((1, n)), T1 * A)))
 
-    for i in xrange(len(D)):
+    for i in range(len(D)):
         T1 = D[i] * V[i].T
         T2 = dot(A, dot(V[i], V[i].T))
         nominator += T1 + dot(A, np.eye(r, r) * dot(np.ones((1, n)), T2 * A))
@@ -315,7 +315,7 @@ def __KL_updateA(X, A, R, D, V, lmbdaA):
         nominator = nominator + (T1 * ARit + T1.transpose() * ARi)
         dnominator = dnominator + E_Der + lmbdaA * E
 
-    for i in xrange(len(D)):
+    for i in range(len(D)):
         nominator += __memSavingWHDivision(D[i], A, V[i]) * V[i].T
         dnominator += __EMult(V[i].T, A.shape[0])
 
@@ -343,7 +343,7 @@ def __KL_updateA_normalized(X, A, R, D, V, lmbdaA):
         dnominator = (dnominator + E_Der +
                       dot(A, np.eye(r, r) * dot(np.ones((1, n)), S * A)))
 
-    for i in xrange(len(D)):
+    for i in range(len(D)):
         T1 = __memSavingWHDivision(D[i], A, V[i]) * V[i].T
         T2 = __EMult(V[i].T, n)
         nominator += T1 + dot(A, np.eye(r, r) * dot(np.ones((1, n)), T2 * A))
@@ -365,7 +365,7 @@ def __MUL_updateA(X, A, R, D, V, lmbdaA):
     nom = np.zeros((n, r))
     dnom = np.zeros((n, r))
     normalizer = np.zeros((n, r))
-    for k in xrange(len(R)):
+    for k in range(len(R)):
         ARAt = np.dot(A, np.dot(R[k], A.transpose()))
         AR = dot(A, R[k])
         ARt = dot(A, R[k].T)
@@ -379,7 +379,7 @@ def __MUL_updateA(X, A, R, D, V, lmbdaA):
         dnom += normalizer + np.ones((n, r)) * lmbdaA
         nom += korpus
 
-    for i in xrange(len(D)):
+    for i in range(len(D)):
         EnD = np.ones((D[i].shape[1], 1))
         AV = np.dot(A, V[i])
         no = dot(dot(En1.T, D[i]), EnD)
@@ -439,7 +439,7 @@ def __MUL_updateR(X, A, R, lmbdaR):
     En1 = np.ones((A.shape[0], 1))
     Enn = np.ones((n, n))
     eps = np.finfo(np.float).eps
-    for k in xrange(len(R)):
+    for k in range(len(R)):
         R[k][R[k] < eps] = 0.0
         ARAt = dot(A, dot(R[k], A.T))
         T1 = __memSavingWHDivision(X[k], dot(A, R[k]), A.T)
@@ -521,7 +521,7 @@ def __LS_compute_fit(X, A, R):
     normX = [sum(M.data ** 2) for M in X]
     sumNorm = sum(normX)
 
-    for i in xrange(len(X)):
+    for i in range(len(X)):
         ARAt = dot(A, dot(R[i], A.T))
         f += norm(X[i] - ARAt) ** 2
     return 1 - f / sumNorm
@@ -532,7 +532,7 @@ def __KL_compute_fit(X, A, R):
     normX = [sum(M.data) for M in X]
     sumNorm = sum(normX)
     f = 0.0
-    for k in xrange(len(X)):
+    for k in range(len(X)):
         ARkAt = dot(A, dot(R[k], A.transpose()))
         f += np.sum(X[k] * __log(__memSavingWHDivision(
             X[k], dot(A, R[k]), A.T)).toarray() - X[k] + ARkAt)
@@ -544,7 +544,7 @@ def __MUL_compute_fit(X, A, R):
     normX = [sum(M.data) for M in X]
     sumNorm = sum(normX)
     f = 0.0
-    for k in xrange(len(X)):
+    for k in range(len(X)):
         ARkAt = dot(A, dot(R[k], A.transpose()))
         XdivARAt = __memSavingWHDivision(X[k], dot(A, R[k]), A.T)
         rsum = np.sum(ARkAt)
@@ -560,7 +560,7 @@ def __EMult(mat, n):
     res = np.zeros((n, mat.shape[1]))
     e = np.ones((1, mat.shape[0]))
     first_row = dot(e, mat)
-    for i in xrange(n):
+    for i in range(n):
         res[i] = first_row
     return res
 
@@ -574,11 +574,11 @@ def __memSavingWHDivision(X, W, H):
     r = 0
     entries = []
     div = coo_matrix((data, (row, col)), shape=X.get_shape())
-    for i in xrange(len(X.row)):
+    for i in range(len(X.row)):
         if X.row[i] > r:
             if len(entries) > 0:
                 Wi = W[r, :]
-                for j in xrange(len(entries)):
+                for j in range(len(entries)):
                     c = X.col[entries[j]]
                     div.data[entries[j]] = dot(Wi, H[:, c])
                     # Divide the X value through the ARiAt value
@@ -598,7 +598,7 @@ def __memSavingWHDivision(X, W, H):
     else:
         if len(entries) > 0:
             Wi = W[r, :]
-            for j in xrange(len(entries)):
+            for j in range(len(entries)):
                 c = X.col[entries[j]]
                 div.data[entries[j]] = dot(Wi, H[:, c])
                 # Divide the X value through the ARiAt value
@@ -614,7 +614,7 @@ def __memSavingWHDivision(X, W, H):
 
 def __normalize(M):
     # normalize column vectors of M to a length of 1
-    for j in xrange(M.shape[1]):
+    for j in range(M.shape[1]):
         M[:, j] = M[:, j] / np.linalg.norm(M[:, j])
     return M
 
@@ -624,14 +624,20 @@ def __log(X):
     X.data = np.log(X.data)
     return X.tocsr()
 
-
+'''
 if __name__ == '__main__':
     """Simple Test if the the code is running"""
     X = [csr_matrix(np.random.randint(0, 2, size=(10, 10)).astype(np.float32))
-         for i in xrange(6)]
+         for i in range(6)]
     nonneg_rescal(X, 3, verbose=True, normalize=True)
     nonneg_rescal(X, 3, verbose=True)
     nonneg_rescal(X, 3, verbose=True, normalize=True, costF='KL')
     nonneg_rescal(X, 3, verbose=True, costF='KL')
     nonneg_rescal(X, 3, verbose=True, costF='MUL')
     nonneg_rescal(X, 3, verbose=True, lambda_A=0.01, lambda_R=0.01)
+'''
+try:
+    # Python 2 forward compatibility
+    range = xrange
+except NameError:
+    pass
