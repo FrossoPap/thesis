@@ -668,7 +668,7 @@ for i in range(32790):
     else:
       flag=0  
     
-print('Number of users is:', u)
+print('Number of final users is:', u)
 
 print('Create',u,'x',u,'array with the follower-followee scheme..') 
 total = np.zeros((u,u), dtype=int)
@@ -802,14 +802,17 @@ for i in range(s):
     # At the same time, create Fake & Real Tensors in which we will then add the test post
     faketesttnsr.append(addftrainpost)
     realtesttnsr.append(addrtrainpost)
-    print('Len fake testtnsr', len(faketesttnsr))
-    #print('Len fake traintnsr:', len(faketraintnsr))
+print('Len fake traitnsr', len(faketraintnsr))
+print('Len fake testtnsr', len(faketesttnsr))
 
 # Compute Rescal for Fake & Real Train Tensors without the test post
+print('Begin decomposing with Rescal')
 rnk = 20
 print ('Rank is', rnk)
 A1, R1, _, _, _ = nonneg_rescal(faketraintnsr, rnk, lambda_A=1, lambda_R=1, lambda_V=1)
+print('End of 1st Rescal, computed A1')
 A2, R2, _, _, _ = nonneg_rescal(realtraintnsr, rnk, lambda_A=1, lambda_R=1, lambda_V=1) # real only
+print('End of 2nd Rescal, computed A2')
 
 # Add test posts in Fake & Real Train Tensors, First For Real
 for i in range(r):
@@ -820,7 +823,9 @@ for i in range(r):
     print('Fake test tnsr len:', len(faketesttnsr))
     print('Fake train tnsr len:', len(faketraintnsr))
     A3, R3, _, _, _ = nonneg_rescal(faketesttnsr, rnk, lambda_A=1, lambda_R=1, lambda_V=1) # fake-fake
+    print('End of 3rd Rescal')
     A4, R4, _, _, _ = nonneg_rescal(realtesttnsr, rnk, lambda_A=1, lambda_R=1, lambda_V=1) # real-fake
+    print('End of 4th Rescal')
     # Remove last element in order to add the new Test post
     faketesttnsr.pop(len(faketesttnsr)-1)
     realtesttnsr.pop(len(realtesttnsr)-1)
