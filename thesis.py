@@ -851,7 +851,7 @@ for j in range(r):
        print('Test post is Fake (Prediction correct)')
        y_pred.append(1)
      else:
-       print('Prediction was wrong')
+       print('Test post is Real (Prediction was wrong)')
        y_pred.append(0)
 
 acc = accuracy_score(y_true, y_pred, normalize=False)
