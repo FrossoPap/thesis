@@ -55,15 +55,13 @@ for i in range(574744):
         # user u2 is followed by u1
         total[indx2,indx1] = 1 
 
-# Number of valid users 
-nu = u
 print('Initializing list of arrays, 120 in total, empty adjacency matrixes..')
 faketnsr = []
 realtnsr = []
 for i in range(120):
     # Constructing an empty sparse matrix u x u 
-    A = coo_matrix((nu, nu), dtype=np.int8).toarray()
-    B = coo_matrix((nu, nu), dtype=np.int8).toarray()
+    A = coo_matrix((u, u), dtype=np.int8).toarray()
+    B = coo_matrix((u, u), dtype=np.int8).toarray()
     faketnsr.append(A)
     realtnsr.append(B)
 
@@ -76,7 +74,8 @@ for i in range(rows):
     if u in musers:
        indx = musers.index(u)
        if (p>120):      
-          # i is followed by j 
+          # i is followed by j
+          # Copy following scheme 
           faketnsr[p-121][indx][:]=total[indx][:]
        else:
           realtnsr[p-1][indx][:]=total[indx][:]
@@ -98,18 +97,18 @@ for i in range(120):
 
 np.save('sortedfaketnsr',sortedfaketnsr)
 np.save('sortedrealtnsr',sortedrealtnsr)
-
 #sortedfaketnsr = np.load('sortedfaketnsr.npy')
 #sortedrealtnsr = np.load('sortedrealtnsr.npy')
+
 print('Constructing 119 x u x u sparse tensor with the first 119 fakes in order to apply Rescal..')
-# T1 is my training set
+# T1 is for the fake training set
 T1 = []
 for i in range(120):
     # Constructing an empty sparse matrix u x u 
      C = csr_matrix(sortedfaketnsr[i])
      T1.append(C)
 
-print('Constructing 119 x u x u sparse tensor with the first 119 real in order to apply Rescal..')
+print('Constructing 119 x u x u sparse tensor with the first 119 reals in order to apply Rescal..')
 T2 = []
 for i in range(120):
     # Constructing an empty sparse matrix u x u 
@@ -126,7 +125,6 @@ T1 = np.array(T1).tolist()
 T2 = np.array(T2).tolist()
 
 print('Begin decomposing with Rescal..')
-
 # Initialize As and Rs for Rescal
 R1 = []
 R2 = []
@@ -149,6 +147,7 @@ addtrtrainpost = []
 
 # Here you change how many posts to have in the train set, here my train set is 40 
 s = 40
+# r is the remaining number of posts as a test set   
 r = 120 - s
 print('My Train Set is of length ', s)
 
@@ -156,13 +155,14 @@ print('My Train Set is of length ', s)
 y_true = []
 y_pred = []
 
-# Labels for True Train Set
+# Labels for True Test Set, 0 means it is true
 for i in range(r):
     y_true.append(0)
 
-# Labels for Fake Train Set
+# Labels for Fake Test Set, 1 means it is fake
 for i in range(r):
     y_true.append(1)
+
 print('y_true=',y_true)
 
 for i in range(s):
@@ -175,8 +175,9 @@ for i in range(s):
     # At the same time, create Fake & Real Tensors in which we will then add the test post
     faketesttnsr.append(addftrainpost)
     realtesttnsr.append(addrtrainpost)
-print('Len fake traitnsr', len(faketraintnsr))
-print('Len fake testtnsr', len(faketesttnsr))
+
+print('Length of train tensor', len(faketraintnsr))
+print('Length of test tensor', len(faketesttnsr))
 
 # Compute Rescal for Fake & Real Train Tensors without the test post
 print('Begin decomposing with Rescal')
@@ -213,7 +214,7 @@ for i in range(r):
        # 1 means it is fake
        y_pred.append(1)
 
-# Same for Fake train set      
+# Same for Fake Train Tensor      
 for j in range(r):
      print('Fake Test Post:', s+i)
      addtestpost = T1[s+i]
