@@ -735,7 +735,6 @@ for i in range(120):
     # Constructing an empty sparse matrix u x u 
      C = csr_matrix(sortedfaketnsr[i])
      T1.append(C)
-#     print(i)
 
 print('Constructing 119 x u x u sparse tensor with the first 119 real in order to apply Rescal..')
 T2 = []
@@ -752,109 +751,110 @@ np.save('T2', T2)
 #T2 = np.load('T2.npy')
 T1 = np.array(T1).tolist()
 T2 = np.array(T2).tolist()
-# 0 means it is real
-print('Begin decomposing with Rescal..')
-resultt=[]
 
-for j in range(1):
-    k1 = 0 
-    #resultf.append(0)
-    #print('Iteration:',j)
-    X = sortedfaketnsr
-    tscv = TimeSeriesSplit(n_splits=119)
-    TimeSeriesSplit(max_train_size=None, n_splits=119)
-    for train_index, test_index in tscv.split(X):
-        R1 = []
-        R2 = []
-        R3 = []
-        R4 = []
-        A1 = []
-        A1 = np.asarray(A1)
-        A2 = []
-        A2 = np.asarray(A2)
-        A3 = []
-        A3 = np.asarray(A3)
-        A4 = []
-        A4 = np.asarray(A4)
-        faketraintnsr=[]
-        faketesttnsr=[]
-        realtraintnsr=[]
-        realtesttnsr=[]
-        addftrainpost = []
-        addtrtrainpost = []
-        dist1 = 0
-        dist2 = 0
-        #print("TRAIN:", train_index, "TEST:", test_index)
-        # Here you change how many posts to have in the train set
-        if len(train_index)==100:
-            print('len(train_index)=', len(train_index))
-            y_true = []
-            for i in range(20):
-                y_true.append(0)
-            for i in range(20):
-                y_true.append(1)
-            print('y_true=',y_true)
-            y_pred = []
-            for i in range(len(train_index)):
-                addftrainpost = T1[train_index[i]]
-                addrtrainpost = T2[train_index[i]]
-                faketraintnsr.append(addftrainpost)
-                realtraintnsr.append(addrtrainpost)
-                faketesttnsr.append(addftrainpost)
-                realtesttnsr.append(addrtrainpost)
-            #print('Len fake testtnsr', len(faketesttnsr))
-            #print('Len fake traintnsr:', len(faketraintnsr))
-            for j in range(20):
-                   print('Real Test Post:', test_index[0] + j)
-                   addtestpost = T2[test_index[0]+j]
-                   faketesttnsr.append(addtestpost)
-                   realtesttnsr.append(addtestpost)
-                   #print('Fake test tnsr len:', len(faketesttnsr))
-                   #print('Fake train tnsr len:', len(faketraintnsr))
-                   A1, R1, _, _, _ = nonneg_rescal(faketraintnsr, 50, lambda_A=1, lambda_R=1)
-                   #print('end of 1st Rescal')
-                   A2, R2, _, _, _ = nonneg_rescal(realtraintnsr, 50, lambda_A=1, lambda_R=1) # real only
-                   #print('end of 2nd Rescal')
-                   A3, R3, _, _, _ = nonneg_rescal(faketesttnsr, 50, lambda_A=1, lambda_R=1) # fake-fake
-                   #print('end of 3rd Rescal')
-                   A4, R4, _, _, _ = nonneg_rescal(realtesttnsr, 50, lambda_A=1, lambda_R=1) # real-fake
-                   #print('end of 4th Rescal')
-                   faketesttnsr.pop(len(faketesttnsr)-1)
-                   realtesttnsr.pop(len(realtesttnsr)-1)
-                   result1 = np.linalg.norm(A1-A3)
-                   result2 = np.linalg.norm(A2-A4)
-                   if result1>result2:
-                      print('Prediction was correct')
-                      y_pred.append(0)
-                   else:
-                      print('Prediction was wrong')
-                      y_pred.append(1)
-            for j in range(20):
-                   print('Fake Test Post:', test_index[0] + j)
-                   addtestpost = T1[test_index[0]+j]
-                   faketesttnsr.append(addtestpost)
-                   realtesttnsr.append(addtestpost)
-                   A1, R1, _, _, _ = nonneg_rescal(faketraintnsr, 50, lambda_A=1, lambda_R=1) 
-                   #print('end of 1st Rescal')
-                   A2, R2, _, _, _ = nonneg_rescal(realtraintnsr, 50, lambda_A=1, lambda_R=1) 
-                   #print('end of 2nd Rescal')
-                   A3, R3, _, _, _ = nonneg_rescal(faketesttnsr, 50, lambda_A=1, lambda_R=1)
-                   #print('end of 3rd Rescal')
-                   A4, R4, _, _, _ = nonneg_rescal(realtesttnsr, 50, lambda_A=1, lambda_R=1)
-                   #print('end of 4th Rescal')
-                   faketesttnsr.pop(len(faketesttnsr)-1)
-                   realtesttnsr.pop(len(realtesttnsr)-1)
-                   result1 = np.linalg.norm(A1-A3)
-                   result2 = np.linalg.norm(A2-A4)
-                   if result1<result2:
-                      print('Prediction was correct')
-                      y_pred.append(1)
-                   else:
-                      print('Prediction was wrong')
-                      y_pred.append(0)
-            acc = accuracy_score(y_true, y_pred, normalize=False)
-            reslt = precision_recall_fscore_support(y_true, y_pred, pos_label=1, average='binary')
-            print('Accuracy Score:',acc/40)
-            print('result=',reslt)
-            print(y_pred)
+print('Begin decomposing with Rescal..')
+
+# Initialize As and Rs for Rescal
+R1 = []
+R2 = []
+R3 = []
+R4 = []
+A1 = []
+A1 = np.asarray(A1)
+A2 = []
+A2 = np.asarray(A2)
+A3 = []
+A3 = np.asarray(A3)
+A4 = []
+A4 = np.asarray(A4)
+faketraintnsr=[]
+faketesttnsr=[]
+realtraintnsr=[]
+realtesttnsr=[]
+addftrainpost = []
+addtrtrainpost = []
+
+# Here you change how many posts to have in the train set, here my train set is 40 
+s = 40
+r = 120 - s
+print('My Train Set is of length ', s)
+
+# Initialize true & prediction labels
+y_true = []
+y_pred = []
+
+# Labels for True Train Set
+for i in range(r):
+    y_true.append(0)
+
+# Labels for Fake Train Set
+for i in range(r):
+    y_true.append(1)
+print('y_true=',y_true)
+
+for i in range(s):
+    addftrainpost = T1[i]
+    addrtrainpost = T2[i]
+    print('Train Post number:', i)    
+    # Create Fake & Real Train Tensors up to s
+    faketraintnsr.append(addftrainpost)
+    realtraintnsr.append(addrtrainpost)
+    # At the same time, create Fake & Real Tensors in which we will then add the test post
+    faketesttnsr.append(addftrainpost)
+    realtesttnsr.append(addrtrainpost)
+    print('Len fake testtnsr', len(faketesttnsr))
+    #print('Len fake traintnsr:', len(faketraintnsr))
+
+# Compute Rescal for Fake & Real Train Tensors without the test post
+A1, R1, _, _, _ = nonneg_rescal(faketraintnsr, 20, lambda_A=1, lambda_R=1, lambda_V=1)
+A2, R2, _, _, _ = nonneg_rescal(realtraintnsr, 20, lambda_A=1, lambda_R=1, lambda_V=1) # real only
+
+# Add test posts in Fake & Real Train Tensors, First For Real
+for i in range(r):
+    print('Real Test Post:', s+i)
+    addtestpost = T2[s+i]
+    faketesttnsr.append(addtestpost)
+    realtesttnsr.append(addtestpost)
+    print('Fake test tnsr len:', len(faketesttnsr))
+    print('Fake train tnsr len:', len(faketraintnsr))
+    A3, R3, _, _, _ = nonneg_rescal(faketesttnsr, 20, lambda_A=1, lambda_R=1, lambda_V=1) # fake-fake
+    A4, R4, _, _, _ = nonneg_rescal(realtesttnsr, 20, lambda_A=1, lambda_R=1, lambda_V=1) # real-fake
+    # Remove last element in order to add the new Test post
+    faketesttnsr.pop(len(faketesttnsr)-1)
+    realtesttnsr.pop(len(realtesttnsr)-1)
+    result1 = np.linalg.norm(A1-A3)
+    result2 = np.linalg.norm(A2-A4)
+    if result1>result2:
+       print('The test post is Real (Prediction Correct)')
+       # 0 means it is real
+       y_pred.append(0)
+    else:
+       print('The test post is Fake (Prediction was wrong)')
+       # 1 means it is fake
+       y_pred.append(1)
+
+# Same for Fake train set      
+for j in range(r):
+     print('Fake Test Post:', s+i)
+     addtestpost = T1[test_index[0]+j]
+     faketesttnsr.append(addtestpost)
+     realtesttnsr.append(addtestpost)
+     A3, R3, _, _, _ = nonneg_rescal(faketesttnsr, 20, lambda_A=1, lambda_R=1, lambda_V=1)
+     A4, R4, _, _, _ = nonneg_rescal(realtesttnsr, 20, lambda_A=1, lambda_R=1, lambda_V=1)
+     faketesttnsr.pop(len(faketesttnsr)-1)
+     realtesttnsr.pop(len(realtesttnsr)-1)
+     result1 = np.linalg.norm(A1-A3)
+     result2 = np.linalg.norm(A2-A4)
+     if result1<result2:
+       print('Test post is Fake (Prediction correct)')
+       y_pred.append(1)
+     else:
+       print('Prediction was wrong')
+       y_pred.append(0)
+
+acc = accuracy_score(y_true, y_pred, normalize=False)
+reslt = precision_recall_fscore_support(y_true, y_pred, pos_label=1, average='binary')
+print('Accuracy Score:',acc/(2*r))
+print('Result=',reslt)
+print(y_pred)
 # END
