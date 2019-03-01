@@ -21,6 +21,13 @@ from sklearn.decomposition.nmf import _initialize_nmf
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import precision_recall_fscore_support
 from nonneg_rescal import *
+from nonneg import *
+from scipy import spatial
+
+def l1_normalize(v):
+    norm = np.sum(v)
+    return v / norm
+
 
 print('Creating Post-User and User-User arrays..')
 post = np.loadtxt('PolitiFactNewsUser.txt' )
@@ -32,6 +39,7 @@ print('Counting number of users with more than one interaction..')
 flag = 0
 u = 0 
 musers = []
+
 for i in range(32790):
     if (post[i,1]==post[i+1,1]):
       if flag==0:
@@ -40,7 +48,13 @@ for i in range(32790):
       flag = flag + 1
     else:
       flag=0  
-    
+print(musers)
+
+#for i in range(23865):
+ #   musers.append(i+1)
+
+#u = 23865
+
 print('Number of final users is:', u)
 
 print('Create', u,'x', u,'array with the follower-followee scheme..') 
@@ -98,6 +112,7 @@ for i in range(120):
 
 np.save('sortedfaketnsr',sortedfaketnsr)
 np.save('sortedrealtnsr',sortedrealtnsr)
+
 #sortedfaketnsr = np.load('sortedfaketnsr.npy')
 #sortedrealtnsr = np.load('sortedrealtnsr.npy')
 
@@ -116,13 +131,16 @@ for i in range(120):
    D = csr_matrix(sortedrealtnsr[i])
    T2.append(D)
 
-print('Loading results..')
-np.save('T1', T1)
+#print('Loading results..')
+#np.save('T1', T1)
+#np.save('T2', T2)
 #T1 = np.load('T1.npy')
-np.save('T2', T2)
 #T2 = np.load('T2.npy')
+
 T1 = np.array(T1).tolist()
 T2 = np.array(T2).tolist()
+#print(T1)
+#print(T2)
 
 print('Begin decomposing with Rescal..')
 # Initialize As and Rs for Rescal
@@ -146,9 +164,10 @@ addftrainpost = []
 addtrtrainpost = []
 
 # Here you change how many posts to have in the train set 
-s = 40
+s = 100
 # r is the remaining number of posts as a test set   
-r = 120 - s
+#r = 50
+r = 20
 print('My Train Set is of length ', s)
 print('My Test Set is of length ', r)
 
@@ -157,19 +176,18 @@ y_true = []
 y_pred = []
 
 # Labels for True Test Set, 0 means it is true
-for i in range(r):
-    y_true.append(0)
+for i in range(20):
+    y_true.append(1)
 
 # Labels for Fake Test Set, 1 means it is fake
-for i in range(r):
-    y_true.append(1)
+for i in range(20):
+    y_true.append(0)
 
 print('y_true=', y_true)
 
 for i in range(s):
     addftrainpost = T1[i]
     addrtrainpost = T2[i]
-    print('Train Post number:', i)    
     # Create Fake & Real Train Tensors up to s
     faketraintnsr.append(addftrainpost)
     realtraintnsr.append(addrtrainpost)
@@ -177,69 +195,108 @@ for i in range(s):
     faketesttnsr.append(addftrainpost)
     realtesttnsr.append(addrtrainpost)
 
-print('Length of train tensor', len(faketraintnsr))
-print('Length of test tensor', len(faketesttnsr))
-#It should be the same
+#print('Length of train tensor', len(faketraintnsr))
+#print('Length of test tensor', len(faketesttnsr))
 
 # Compute Rescal for Fake & Real Train Tensors without the test post
-print('Begin decomposing with Rescal')
-rnk = 20
+rnk = 10
 print ('Rank is', rnk)
-A1, R1, _, _, _ = nonneg_rescal(faketraintnsr, rnk, lambda_A=1, lambda_R=1, lambda_V=1)
+A1, R1, _, _, _ = nonneg_rescal(faketraintnsr, rnk, lambda_A=2, lambda_R=2, lambda_V=2)
 print('End of 1st Rescal, computed A1')
-A2, R2, _, _, _ = nonneg_rescal(realtraintnsr, rnk, lambda_A=1, lambda_R=1, lambda_V=1) 
+A2, R2, _, _, _ = nonneg_rescal(realtraintnsr, rnk, lambda_A=2, lambda_R=2, lambda_V=2) 
 print('End of 2nd Rescal, computed A2')
-'''
-# Add test posts in Fake & Real Train Tensors, First For Real
-for i in range(r):
-    print('Real Test Post:', s+i)
-    addtestpost = T2[s+i]
+#print('Zeros in A1:', np.sum(~A1.any(1)))
+#print('Zeros in A2:', np.sum(~A2.any(1)))
+#indexes = np.where(~A1.any(axis=1))[0]
+#indexes2 = np.where(~A2.any(axis=1))[0]
+#A1 = np.delete(A1, indexes, axis=0)
+#A2 = np.delete(A2, indexes2, axis=0)
+#print(A1)
+normA1 = np.linalg.norm(A1)
+normA2 = np.linalg.norm(A2)
+print('Norm A1:', normA1)
+print('Norm A2:', normA2)
+
+print('np.linalg.norm A1',normA1)
+print('np.linalg.norm A2',normA2)
+
+
+for i in range(20):
+    print('_____________________________________________________________________________________')
+    print('Fake Test Post:', 100+i)
+    addtestpost = T1[100+i]
     faketesttnsr.append(addtestpost)
     realtesttnsr.append(addtestpost)
     print('Fake test tnsr len:', len(faketesttnsr))
     print('Fake train tnsr len:', len(faketraintnsr))
-    A3, R3, _, _, _ = nonneg_rescal(faketesttnsr, rnk, lambda_A=1, lambda_R=1, lambda_V=1) # fake-real
-    print('End of 3rd Rescal')
-    A4, R4, _, _, _ = nonneg_rescal(realtesttnsr, rnk, lambda_A=1, lambda_R=1, lambda_V=1) # real-real
-    print('End of 4th Rescal')
-    result1 = np.linalg.norm(A1-A3)
-    result2 = np.linalg.norm(A2-A4)
-    if result1>result2:
-       print('Test post is Real (Prediction Correct)')
-       # 0 means it is real
-       y_pred.append(0)
+    A3, R3, _, _, _ = nonneg(faketesttnsr, rnk, lambda_A=2, lambda_R=2, lambda_V=2)
+    A4, R4, _, _, _ = nonneg(realtesttnsr, rnk, lambda_A=2, lambda_R=2, lambda_V=2)
+    t = 0.99
+    
+    A1 = np.where(A1>t, 1, 0)
+    A2 = np.where(A2>t, 1, 0)
+    A3 = np.where(A3>t, 1, 0)
+    A4 = np.where(A4>t, 1, 0)
+
+    A1 = A1.flatten()
+    A2 = A2.flatten()
+    A3 = A3.flatten()
+    A4 = A4.flatten()
+    
+    z1 = 1 - spatial.distance.cosine(A1,A3)
+    z2 = 1 - spatial.distance.cosine(A2,A4)
+    
+    if z1>z2:
+      print('fake',z1,z2)
+      y_pred.append(1)
     else:
-       print('Test post is Fake (Prediction was wrong)')
-       # 1 means it is fake
-       y_pred.append(1)
-    # Remove last element in order to add the new Test post
+      print('real',z1,z2)
+      y_pred.append(0)
+
     faketesttnsr.pop(len(faketesttnsr)-1)
     realtesttnsr.pop(len(realtesttnsr)-1)
-'''
-# Same for Fake Train Tensor      
-for j in range(r):
-     print('Fake Test Post:', s+j)
-     addtestpost = T1[s+j]
-     faketesttnsr.append(addtestpost)
-     realtesttnsr.append(addtestpost)
-     A3, R3, _, _, _ = nonneg_rescal(faketesttnsr, rnk, lambda_A=1, lambda_R=1, lambda_V=1)
-     A4, R4, _, _, _ = nonneg_rescal(realtesttnsr, rnk, lambda_A=1, lambda_R=1, lambda_V=1)
-     result1 = np.linalg.norm(A1-A3)
-     result2 = np.linalg.norm(A2-A4)
-     if result1<result2:
-       print('Test post is Fake (Prediction correct)')
-       y_pred.append(1)
-     else:
-       print('Test post is Real (Prediction was wrong)')
-       y_pred.append(0)
-     # Remove last element in order to add the new Test post
-     faketesttnsr.pop(len(faketesttnsr)-1)
-     realtesttnsr.pop(len(realtesttnsr)-1)
 
-# Compute scores 
+for i in range(20):
+    print('_____________________________________________________________________________________')
+    print('Real Test Post:', 100+i)
+    addtestpost = T2[100+i]
+    faketesttnsr.append(addtestpost)
+    realtesttnsr.append(addtestpost)
+    print('Fake test tnsr len:', len(faketesttnsr))
+    print('Fake train tnsr len:', len(faketraintnsr))
+    A3, R3, _, _, _ = nonneg(faketesttnsr, rnk, lambda_A=2, lambda_R=2, lambda_V=2)
+    A4, R4, _, _, _ = nonneg(realtesttnsr, rnk, lambda_A=2, lambda_R=2, lambda_V=2)
+    t = 0.99
+
+    A1 = np.where(A1>t, 1, 0)
+    A2 = np.where(A2>t, 1, 0)
+    A3 = np.where(A3>t, 1, 0)
+    A4 = np.where(A4>t, 1, 0)
+
+    A1 = A1.flatten()
+    A2 = A2.flatten()
+    A3 = A3.flatten()
+    A4 = A4.flatten()
+
+    z1 = 1 - spatial.distance.cosine(A1,A3)
+    z2 = 1 - spatial.distance.cosine(A2,A4)
+
+    if z1>z2:
+      print('fake,wrong',z1,z2)
+      y_pred.append(1)
+    else:
+      print('real,correct',z1,z2)
+      y_pred.append(0)
+
+    faketesttnsr.pop(len(faketesttnsr)-1)
+    realtesttnsr.pop(len(realtesttnsr)-1)
+
 acc = accuracy_score(y_true, y_pred, normalize=False)
 reslt = precision_recall_fscore_support(y_true, y_pred, pos_label=1, average='binary')
+print('Accurate:', acc)
 print('Accuracy Score:',acc/(2*r))
 print('Result=',reslt)
 print(y_pred)
+
+
 # END
