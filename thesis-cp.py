@@ -100,7 +100,6 @@ sortedreal = np.loadtxt('sortedrealposts.txt')
 sortedreal = sortedreal.astype(int)
 
 print('Sorting tensors by date according to sortedfake & sortedreal arrays..')
-
 i=0
 for i in range(120):
     #print('row from initial:', sortedfake[i]-1)
@@ -113,9 +112,7 @@ for i in range(120):
       sortedrealtnsr[j][i][:]=realtnsr[j][sortedreal[i]-1][:]
 
 # CP Decomposition
-
 print('Merging Real and Fake Sets, 240 posts (rows) and', len(musers), 'users (slices) in total..')
-
 # Initializing X array with Real and Fake Train Set
 X = [] 
 for i in range(len(musers)):
@@ -124,7 +121,6 @@ for i in range(len(musers)):
     X.append(A)
 
 # Merging, 240 rows
-
 for i in range(len(musers)):
    k = 0
    for j in range(0,240,2):
@@ -153,9 +149,7 @@ for i in range(120):
    y.append(0)
 
 print('Number of labels:', length(y))
-
 # X holds the feature matrix (240 x rnk) 
-
 print('Creating Train and Test Sets..')
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.20) 
 
