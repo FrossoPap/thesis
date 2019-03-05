@@ -21,6 +21,10 @@ from sklearn.metrics import precision_recall_fscore_support
 from sklearn import svm
 from sktensor import dtensor, cp_als, ktensor
 
+from sklearn.model_selection import train_test_split
+from sklearn.svm import SVC
+from sklearn.metrics import classification_report, confusion_matrix
+
 print('tensorflow')
 import tensorflow as tf
 
@@ -109,15 +113,17 @@ for i in range(120):
       sortedrealtnsr[j][i][:]=realtnsr[j][sortedreal[i]-1][:]
 
 # CP Decomposition
-# size of train set 
-tr = 120 
-tsortedfaketnsr = []
-tsortedrealtnsr = []
+
+print('Merging Real and Fake Sets, 240 posts (rows) and', len(musers), 'users (slices) in total..')
+
+# Initializing X array with Real and Fake Train Set
 X = [] 
 for i in range(len(musers)):
     # Constructing an empty sparse matrix 120 x u 
     A = coo_matrix((240, len(musers)), dtype=np.int8).toarray()
     X.append(A)
+
+# Merging, 240 rows
 
 for i in range(len(musers)):
    k = 0
@@ -127,77 +133,49 @@ for i in range(len(musers)):
     k = k + 1 
    print('k:',k)
 
-print('Densify tensor')
+print('Densifying X tensor..')
 T1 = dtensor(X)
 
 rnk = 5
-print(rnk)  
+print('Rank is:', rnk)  
 
-print('CP decomposition for T1')
+print('CP decomposition for tensor..')
 P1, fit1, itr1, exectimes1 = cp_als(T1, rnk, init='random')
 
+# We need mode 2 Decomposition
 X = P1.U[1]
-print(X.shape)
+print('Shape of decomposed array:', X.shape)
 
-# training set size 
-#t1 = 100 
-#t2 = 120 - t1
-#Tr = np.zeros((t1,rnk))
-#Tst = np.zeros((t2,rnk))
-
+print('Creating label array, 1 means fake, 0 means real..')
 y = []
 for i in range(120):
    y.append(1)
    y.append(0)
 
-print(y)
-'''
-print('Creating training and test sets')
-for i in range(t1):
-   Tr[i] = L[i]
+print('Number of labels:', length(y))
 
-for i in range(t2):
-   Tst[i] = L[t1 + i]
+# X holds the feature matrix (240 x rnk) 
 
-clf = svm.SVC(gamma='scale')
-clf.fit(Tr,y)
-
-for i in range(t2):
-   print(clf.predict([Tst[i]]))
-
-
-
-
-'''
-
-from sklearn.model_selection import train_test_split  
+print('Creating Train and Test Sets..')
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.20) 
 
-from sklearn.svm import SVC  
+print('Fitting the model..(Sigmoid SVC Kernel)')
 svclassifier = SVC(kernel='sigmoid')  
 svclassifier.fit(X_train, y_train)  
 y_pred = svclassifier.predict(X_test)  
 
-from sklearn.metrics import classification_report, confusion_matrix  
+print('Results:')
 print(confusion_matrix(y_test, y_pred))  
 print(classification_report(y_test, y_pred))
 
-
+print('Fitting the model..(Gaussian SVC Kernel)')
 svclassifier = SVC(kernel='rbf')  
 svclassifier.fit(X_train, y_train) 
 y_pred = svclassifier.predict(X_test)  
+
+print('Results:')
 print(confusion_matrix(y_test, y_pred))  
 print(classification_report(y_test, y_pred))  
 
-
-
-'''
-# Compute scores 
-acc = accuracy_score(y_true, y_pred, normalize=False)
-reslt = precision_recall_fscore_support(y_true, y_pred, pos_label=1, average='binary')
-print('Accuracy Score:',acc/(2*r))
-print('Result=',reslt)
-print(y_pred)
-'''
 # END
 
