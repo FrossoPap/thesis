@@ -155,7 +155,8 @@ for j in range(100,120):
     #print('FAKE TRAIN SET POST', i)
     A = sortedfaketnsr[i]
     A = A.flatten()
-    #print(np.sum((A==B) & B!=0))
+    s = np.sum((A==B) & B!=0)
+    if s!=0: print(s)
     test = 1 - spatial.distance.cosine(A,B)
     #test = np.linalg.norm(A-B)
     #print(simil)
@@ -169,7 +170,8 @@ for j in range(100,120):
     #print('REAL TRAIN SET POST', k)
     A = sortedrealtnsr[k]
     A = A.flatten()
-    #print(np.sum((A==B) & B!=0))
+    s= np.sum((A==B) & B!=0)
+    if s!=0: print(s)
     test = 1 - spatial.distance.cosine(A,B)
     #test = np.linalg.norm(A-B)
     if test>simil:
@@ -200,7 +202,8 @@ for j in range(100,120):
     #print('FAKE TRAIN SET POST:', i)
     A = sortedfaketnsr[i]
     A = A.flatten()
-    #print(np.sum((A==B) & B!=0))
+    s = np.sum((A==B) & B!=0)
+    if s!=0: print(s)
     test = 1 - spatial.distance.cosine(A,B)
     #print(simil)
     if test>simil:
@@ -213,7 +216,8 @@ for j in range(100,120):
     A = sortedrealtnsr[k]
     A = A.flatten()
     test = 1 - spatial.distance.cosine(A,B)
-    #print(np.sum((A==B) & B!=0))
+    s = np.sum((A==B) & B!=0)
+    if s!=0: print(s)
     if test>simil:
        simil = test
        flag = 1
