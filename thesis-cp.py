@@ -20,15 +20,11 @@ from sklearn.metrics import accuracy_score
 from sklearn.metrics import precision_recall_fscore_support
 from sklearn import svm
 from sktensor import dtensor, cp_als, ktensor
-
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
 from sklearn.metrics import classification_report, confusion_matrix
-
-print('tensorflow')
 import tensorflow as tf
 
-print('start')
 print('Creating Post-User and User-User arrays..')
 post = np.loadtxt('PolitiFactNewsUser.txt' )
 user = np.loadtxt('PolitiFactUserUser.txt')
@@ -49,7 +45,6 @@ for i in range(32790):
       flag=0  
     
 print('Number of final users is:', u)
-print('len of users', len(musers))
 print('Create', u,'x', u,'array with the follower-followee scheme..') 
 total = np.zeros((u,u), dtype=int)
 for i in range(574744):
@@ -92,12 +87,15 @@ for i in range(rows):
           faketnsr[indx][p-121][:]=total[indx][:]
        else:
           realtnsr[indx][p-1][:]=total[indx][:]
-       
+
+'''       
+# No sorting needed
 print('Loading sorted by date fake & real posts created in mergefake.py & mergereal.py..')
 sortedfake = np.loadtxt('sortedfakeposts.txt')
 sortedfake = sortedfake.astype(int)
 sortedreal = np.loadtxt('sortedrealposts.txt')
 sortedreal = sortedreal.astype(int)
+
 
 print('Sorting tensors by date according to sortedfake & sortedreal arrays..')
 i=0
@@ -110,6 +108,7 @@ for i in range(120):
     #print('row from initial:', sortedreal[i]-1)
     for j in range(len(musers)):
       sortedrealtnsr[j][i][:]=realtnsr[j][sortedreal[i]-1][:]
+'''
 
 # CP Decomposition
 print('Merging Real and Fake Sets, 240 posts (rows) and', len(musers), 'users (slices) in total..')
@@ -124,10 +123,9 @@ for i in range(len(musers)):
 for i in range(len(musers)):
    k = 0
    for j in range(0,240,2):
-    X[i][j][:] = sortedfaketnsr[i][k][:]
-    X[i][j+1][:] = sortedrealtnsr[i][k][:]
+    X[i][j][:] = faketnsr[i][k][:]
+    X[i][j+1][:] = realtnsr[i][k][:]
     k = k + 1 
-   print('k:',k)
 
 print('Densifying X tensor..')
 T1 = dtensor(X)
@@ -148,12 +146,12 @@ for i in range(120):
    y.append(1)
    y.append(0)
 
-print('Number of labels:', length(y))
+print('Number of labels:', len(y))
 # X holds the feature matrix (240 x rnk) 
 print('Creating Train and Test Sets..')
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.20) 
 
-print('Fitting the model..(Sigmoid SVC Kernel)')
+print('Fitting the model..(Sigmoid SVM Kernel)')
 svclassifier = SVC(kernel='sigmoid')  
 svclassifier.fit(X_train, y_train)  
 y_pred = svclassifier.predict(X_test)  
@@ -162,7 +160,7 @@ print('Results:')
 print(confusion_matrix(y_test, y_pred))  
 print(classification_report(y_test, y_pred))
 
-print('Fitting the model..(Gaussian SVC Kernel)')
+print('Fitting the model..(Gaussian SVM Kernel)')
 svclassifier = SVC(kernel='rbf')  
 svclassifier.fit(X_train, y_train) 
 y_pred = svclassifier.predict(X_test)  
