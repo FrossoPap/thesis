@@ -19,13 +19,12 @@ from sklearn.decomposition.nmf import _initialize_nmf
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import precision_recall_fscore_support
 from sklearn import svm
-#from sktensor import dtensor, cp_als, ktensor
-from sktensor import dtensor, ktensor
+from sktensor import dtensor, cp_als, ktensor
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
 from sklearn.metrics import classification_report, confusion_matrix
 import tensorflow as tf
-from cp import als as cp_als
+
 
 print('Creating Post-User and User-User arrays..')
 post = np.loadtxt('PolitiFactNewsUser.txt' )
@@ -90,76 +89,92 @@ for i in range(rows):
        else:
           realtnsr[indx][p-1][:]=total[indx][:]
 
-'''       
-# No sorting needed
-print('Loading sorted by date fake & real posts created in mergefake.py & mergereal.py..')
-sortedfake = np.loadtxt('sortedfakeposts.txt')
-sortedfake = sortedfake.astype(int)
-sortedreal = np.loadtxt('sortedrealposts.txt')
-sortedreal = sortedreal.astype(int)
-
-
-print('Sorting tensors by date according to sortedfake & sortedreal arrays..')
-i=0
-for i in range(120):
-    #print('row from initial:', sortedfake[i]-1)
-    for j in range(len(musers)):
-      sortedfaketnsr[j][i][:]=faketnsr[j][sortedfake[i]-1][:]
-      
-for i in range(120):
-    #print('row from initial:', sortedreal[i]-1)
-    for j in range(len(musers)):
-      sortedrealtnsr[j][i][:]=realtnsr[j][sortedreal[i]-1][:]
-'''
-
 # CP Decomposition
 print('Merging Real and Fake Sets, 240 posts (rows) and', len(musers), 'users (slices) in total..')
 # Initializing X array with Real and Fake Train Set
+tr = 192
+tst = (240 - tr)/2
 X = [] 
+Xnew = []
 for i in range(len(musers)):
     # Constructing an empty sparse matrix 120 x u 
-    A = coo_matrix((240, len(musers)), dtype=np.int8).toarray()
+    A = coo_matrix((192, len(musers)), dtype=np.int8).toarray()
     X.append(A)
-
+    B = coo_matrix((1, len(musers)), dtype=np.int8).toarray()
+    Xnew.append(B)
+ 
 # Merging, 240 rows
 for i in range(len(musers)):
    k = 0
-   for j in range(0,240,2):
+   for j in range(0,192,2):
     X[i][j][:] = faketnsr[i][k][:]
     X[i][j+1][:] = realtnsr[i][k][:]
     k = k + 1 
 
+
+print('K is:', k)
 print(X[0].shape)
 print('Densifying X tensor..')
 T1 = dtensor(X)
 print('Shape of tensor:', tf.shape(T1))
 
-rnk = 5  
+rnk = 35 
 print('Rank is:', rnk)  
 print(T1.shape[0], T1.shape[1], T1.shape[2])
 print('CP decomposition for tensor..')
-
-
-
 P1, fit1, itr1, exectimes1 = cp_als(T1, rnk, init='random')
-X = P1.U[1]
+
+print('End of 1st Decomposition')
+X_train = P1.U[1]
 
 print((P1.U[0]).shape, (P1.U[1]).shape, (P1.U[2]).shape)
-print('Shape of decomposed array:', X.shape)
+print('Shape of decomposed array:', X_train.shape)
 
 print('Creating label array, 1 means fake, 0 means real..')
-y = []
-for i in range(120):
-   y.append(1)
-   y.append(0)
 
+y_train = []
+for i in range(96):
+   y_train.append(1)
+   y_train.append(0)
 
+y_test = []
+for i in range(24):
+   y_test.append(1)
+for i in range(24):
+   y_test.append(0)
 
+from cpfoldinnew import *
+
+X_test = coo_matrix((48, rnk), dtype=np.int8).toarray()
+
+print('Folding in...')
+
+for j in range(24):
+  print('Add fake test post no:', 96+j,'in line',j)	
+  for i in range(len(musers)):
+    Xnew[i][0][:] = faketnsr[i][96+j][:]
+  Xnew = dtensor(Xnew)
+  #print('Folding in..')
+  Unew, Pnew = fold_in(Xnew, P1.U, rnk, init='random') 
+  X_test[j] = Unew
+  print(Unew)
+  #print('End of Folding in..')
+
+for k in range(24):
+  print('Add real test post no:', 96+k, 'in line:', 24+k)
+  for i in range(len(musers)):
+    Xnew[i][0][:] = realtnsr[i][96+k][:]
+  Xnew = dtensor(Xnew)
+  Unew, Pnew = fold_in(Xnew, P1.U, rnk, init='random')
+  print(Unew)
+  X_test[24+k] = Unew
+
+'''
 print('Number of labels:', len(y))
 # X holds the feature matrix (240 x rnk) 
 print('Creating Train and Test Sets..')
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.20, random_state=42) 
-
+'''
 
 print('Y_test:', y_test)
 print('Fitting the model..(Sigmoid SVM Kernel)')
@@ -179,6 +194,28 @@ y_pred = svclassifier.predict(X_test)
 print('Results:')
 print(confusion_matrix(y_test, y_pred))  
 print(classification_report(y_test, y_pred))  
+
+
+print('Fitting the model..(LINEAR SVM Kernel)')
+svclassifier = SVC(kernel='linear')
+svclassifier.fit(X_train, y_train)
+y_pred = svclassifier.predict(X_test)
+
+print('Results:')
+print(confusion_matrix(y_test, y_pred))
+print(classification_report(y_test, y_pred))
+
+from sklearn.neighbors import KNeighborsClassifier  
+
+print('Fitting the model..(KNN)')
+classifier = KNeighborsClassifier(n_neighbors=5)  
+classifier.fit(X_train, y_train)  
+y_pred = classifier.predict(X_test)  
+
+print('Results:')
+print(confusion_matrix(y_test, y_pred))
+print(classification_report(y_test, y_pred))
+
 
 # END
 
