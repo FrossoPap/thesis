@@ -1,23 +1,9 @@
 # coding: utf-8
-# Copyright (C) 2013 Maximilian Nickel <mnick@mit.edu>
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-This module holds diffent algorithms to compute the CP decomposition, i.e.
-algorithms where
+This module holds algorithms to compute the folding-in of CP decomposition
 
-.. math:: \\ten{X} \\approx \sum_{r=1}^{rank} \\vec{u}_r^{(1)} \outer \cdots \outer \\vec{u}_r^{(N)}
+P.U[0], P.U[2] remain unchanged
+Only P.U[1] changes (mode 2)
 
 """
 import logging
@@ -67,36 +53,27 @@ def fold_in(X, Uold, rank, **kwargs):
     for itr in range(maxiter):
         tic = time.clock()
         fitold = fit
-        # P.U[0], P.U[2] remain unchanged. Only P.U[1] changes
-
         n = 1 # Mode 1 is the array that changes
         Unew = X.uttkrp(U, n)
         '''
+        # Can't implement because of memory error
         n, p = U[0].shape
         m, pC = U[2].shape
         C = np.einsum('ij, kj -> ikj', U[0], U[2]).reshape(m * n, p)
-        print('C shape:', C.shape)
-        #print('Unew shape:', Unew.shape)
         nk, ni, nj = X.shape
         jk = nk * nj
         sess = tf.Session()
         with sess.as_default():
            Xnew = tf.reshape(X, [1,jk])
            Xnew = Xnew.eval()
-
-        print(type(Xnew), type(C))
-        print('Xnew.shape:', Xnew.shape)
         Z = Xnew.dot(pinv(C))
-        print('Z shape:', Z.shape)
         Unew = (Unew.dot(Z)).dot(inv(Unew))
-        print('Unew shapei:', Unew.shape)
-        '''
+        ''' 
         Y = ones((rank, rank), dtype=dtype)
         for i in (list(range(n)) + list(range(n + 1, N))):
             Y = Y * dot(U[i].T, U[i])
-        print('Pinv Y shape:', pinv(Y).shape)
-        print('Y shape:', Y.shape)
         Unew = Unew.dot(pinv(Y))
+        
         # Normalize
         if itr == 0:
             lmbda = sqrt((Unew ** 2).sum(axis=0))
@@ -109,13 +86,15 @@ def fold_in(X, Uold, rank, **kwargs):
 
         if fit_method == 'full':
             normresidual = normX ** 2 + P.norm() ** 2 - 2 * P.innerprod(X)
-#            normresidual = normX ** 2 + np.linalg.norm(U[1]) ** 2 - 2 * (np.linalg.norm(U[1]))*(X)
+            #normresidual = normX ** 2 + np.linalg.norm(U[1]) ** 2 - 2 * (np.linalg.norm(U[1]))*(X)
             print(type(normresidual))
             fit = 1 - (normresidual / normX ** 2)
         else:
             fit = itr
+        
         fitchange = abs(fitold - fit)
         exectimes.append(time.clock() - tic)
+        
         if itr > 0 and fitchange < conv:
             break
 
@@ -148,9 +127,8 @@ def _init(init, X, N, Uold, rank, dtype):
     Uinit[0] = Uold[0]
     Uinit[1] = Uold[1] 
     Uinit[2] = Uold[2]
-    print('Unit0, 2:',Uinit[0], Uinit[2])
-    #Uinit[1] = Uold[1]
     '''
+    # Or initialize Uinit[1] from start (?)   
     n = 1 
     if isinstance(init, list):
         Uinit = init
