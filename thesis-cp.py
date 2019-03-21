@@ -134,12 +134,10 @@ print('Densifying X tensor..')
 T1 = dtensor(X)
 print('Shape of tensor:', tf.shape(T1))
 
-rnk = 5  
+rnk = 25
 print('Rank is:', rnk)  
 print(T1.shape[0], T1.shape[1], T1.shape[2])
 print('CP decomposition for tensor..')
-
-
 
 P1, fit1, itr1, exectimes1 = cp_als(T1, rnk, init='random')
 X = P1.U[1]
@@ -153,13 +151,10 @@ for i in range(120):
    y.append(1)
    y.append(0)
 
-
-
 print('Number of labels:', len(y))
 # X holds the feature matrix (240 x rnk) 
 print('Creating Train and Test Sets..')
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.20, random_state=42) 
-
 
 print('Y_test:', y_test)
 print('Fitting the model..(Sigmoid SVM Kernel)')
@@ -179,6 +174,32 @@ y_pred = svclassifier.predict(X_test)
 print('Results:')
 print(confusion_matrix(y_test, y_pred))  
 print(classification_report(y_test, y_pred))  
+
+
+print('Fitting the model..(LINEAR SVM Kernel)')
+svclassifier = SVC(kernel='linear')
+svclassifier.fit(X_train, y_train)
+y_pred = svclassifier.predict(X_test)
+
+print('Results:')
+print(confusion_matrix(y_test, y_pred))
+print(classification_report(y_test, y_pred))
+
+from sklearn.neighbors import KNeighborsClassifier  
+
+print('Fitting the model..(KNN)')
+classifier = KNeighborsClassifier(n_neighbors=5)  
+classifier.fit(X_train, y_train)  
+y_pred = classifier.predict(X_test)  
+
+print('Results:')
+print(confusion_matrix(y_test, y_pred))
+print(classification_report(y_test, y_pred))
+
+
+
+
+
 
 # END
 

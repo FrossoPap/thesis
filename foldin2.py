@@ -122,10 +122,9 @@ def _init(init, X, N, Uold, rank, dtype):
     """
     Uinit = [None for _ in range(N)]
     Uinit[0] = Uold[0]
-    Uinit[1] = Uold[1] 
+    #Uinit[1] = Uold[1] 
     Uinit[2] = Uold[2]
-    '''
-    # Or initialize Uinit[1] from start (?)   
+        # Or initialize Uinit[1] from start (?)   
     n = 1 
     if isinstance(init, list):
         Uinit = init
@@ -135,6 +134,5 @@ def _init(init, X, N, Uold, rank, dtype):
         Uinit[1] = array(nvecs(X, n, rank), dtype=dtype)
     else:
         raise 'Unknown option (init=%s)' % str(init)
-    '''
     return Uinit
      

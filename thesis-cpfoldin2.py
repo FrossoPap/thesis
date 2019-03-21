@@ -118,7 +118,7 @@ print('Densifying X tensor..')
 T1 = dtensor(X)
 print('Shape of tensor:', tf.shape(T1))
 
-rnk = 25 
+rnk = 15 
 print('Rank is:', rnk)  
 print(T1.shape[0], T1.shape[1], T1.shape[2])
 print('CP decomposition for tensor..')
@@ -143,7 +143,7 @@ for i in range(24):
 for i in range(24):
    y_test.append(0)
 
-from foldin import *
+from foldin2 import *
 
 X_test = coo_matrix((48, rnk), dtype=np.int8).toarray()
 
