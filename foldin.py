@@ -1,10 +1,8 @@
 # coding: utf-8
 """
 This module holds algorithms to compute the folding-in of CP decomposition
-
 P.U[0], P.U[2] remain unchanged
-Only P.U[1] changes (mode 2)
-
+Only P.U[1] changes (Shape: train posts x users)
 """
 import logging
 import time
