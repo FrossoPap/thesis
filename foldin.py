@@ -46,17 +46,20 @@ def fold_in(X, Uold, rank, **kwargs):
 
     U = _init(ainit, X, N, Uold, rank, dtype)
     fit = 0
+    O = U[1]
     exectimes = []
-
     for itr in range(maxiter):
+        #print(itr)
         tic = time.clock()
         fitold = fit
         n = 1 # Mode 1 is the array that changes
         Unew = X.uttkrp(U, n)
-        '''
+        
+        '''       
         # Can't implement because of memory error
         n, p = U[0].shape
         m, pC = U[2].shape
+        print('n -> U[0], m-> U[2] ROWS', n, m)
         C = np.einsum('ij, kj -> ikj', U[0], U[2]).reshape(m * n, p)
         nk, ni, nj = X.shape
         jk = nk * nj
@@ -64,22 +67,32 @@ def fold_in(X, Uold, rank, **kwargs):
         with sess.as_default():
            Xnew = tf.reshape(X, [1,jk])
            Xnew = Xnew.eval()
+        print('C shape:', C.shape)
+        print('Xnew shape:', Xnew.shape)
         Z = Xnew.dot(pinv(C))
         Unew = (Unew.dot(Z)).dot(inv(Unew))
-        ''' 
+        '''
         Y = ones((rank, rank), dtype=dtype)
         for i in (list(range(n)) + list(range(n + 1, N))):
             Y = Y * dot(U[i].T, U[i])
         Unew = Unew.dot(pinv(Y))
-        
+        #O = O*Unew/(O.dot(Y))
         # Normalize
+        
         if itr == 0:
             lmbda = sqrt((Unew ** 2).sum(axis=0))
         else:
             lmbda = Unew.max(axis=0)
             lmbda[lmbda < 1] = 1
-        
+        '''
+        if itr == 0:
+            lmbda = sqrt((O ** 2).sum(axis=0))
+        else:
+            lmbda = O.max(axis=0)
+            lmbda[lmbda < 1] = 1
+        '''
         U[1] = Unew / lmbda
+        #U[1] = O / lmbda
         P = ktensor(U, lmbda)
 
         if fit_method == 'full':
@@ -122,9 +135,9 @@ def _init(init, X, N, Uold, rank, dtype):
     """
     Uinit = [None for _ in range(N)]
     Uinit[0] = Uold[0]
-    Uinit[1] = Uold[1] 
+    #Uinit[1] = Uold[1] 
     Uinit[2] = Uold[2]
-    '''
+    
     # Or initialize Uinit[1] from start (?)   
     n = 1 
     if isinstance(init, list):
@@ -135,6 +148,6 @@ def _init(init, X, N, Uold, rank, dtype):
         Uinit[1] = array(nvecs(X, n, rank), dtype=dtype)
     else:
         raise 'Unknown option (init=%s)' % str(init)
-    '''
+    
     return Uinit
      

@@ -25,7 +25,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
 from sklearn.metrics import classification_report, confusion_matrix
 import tensorflow as tf
-from cp import als as cp_als
+from classcp import als as cp_als
 
 print('Creating Post-User and User-User arrays..')
 post = np.loadtxt('PolitiFactNewsUser.txt' )
@@ -134,12 +134,22 @@ print('Densifying X tensor..')
 T1 = dtensor(X)
 print('Shape of tensor:', tf.shape(T1))
 
+print('Creating label array, 1 means fake, 0 means real..')
+y_train = []
+for i in range(120):
+   y_train.append(1)
+   y_train.append(0)
+
+print('Number of labels:', len(y_train))
+
 rnk = 5
 print('Rank is:', rnk)  
 print(T1.shape[0], T1.shape[1], T1.shape[2])
-print('CP decomposition for tensor..')
+print('CP-CLASS decomposition for tensor..')
 
-P1, fit1, itr1, exectimes1 = cp_als(T1, rnk, init='random')
+P1, y_pred, fit1, itr1, exectimes1 = cp_als(T1, y_train, rnk, init='random')
+
+'''
 X = P1.U[1]
 print('FAKE')
 for i in range(192,240):
@@ -149,66 +159,12 @@ print('REAL')
 for j in range(192,240):
    if j%2!=0:
     print(X[j])
-
-
-print((P1.U[0]).shape, (P1.U[1]).shape, (P1.U[2]).shape)
-print('Shape of decomposed array:', X.shape)
-
-print('Creating label array, 1 means fake, 0 means real..')
-y = []
-for i in range(120):
-   y.append(1)
-   y.append(0)
-
-print('Number of labels:', len(y))
-# X holds the feature matrix (240 x rnk) 
-print('Creating Train and Test Sets..')
-#X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.20, random_state=42) 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.20, shuffle=False)
-print(y_test)
-print('Y_test:', y_test)
-print('Fitting the model..(Sigmoid SVM Kernel)')
-svclassifier = SVC(kernel='sigmoid')  
-svclassifier.fit(X_train, y_train)  
-y_pred = svclassifier.predict(X_test)  
+'''
+y_test = y_train
 
 print('Results:')
 print(confusion_matrix(y_test, y_pred))  
 print(classification_report(y_test, y_pred))
-
-print('Fitting the model..(Gaussian SVM Kernel)')
-svclassifier = SVC(kernel='rbf')  
-svclassifier.fit(X_train, y_train) 
-y_pred = svclassifier.predict(X_test)  
-
-print('Results:')
-print(confusion_matrix(y_test, y_pred))  
-print(classification_report(y_test, y_pred))  
-
-
-print('Fitting the model..(LINEAR SVM Kernel)')
-svclassifier = SVC(kernel='linear')
-svclassifier.fit(X_train, y_train)
-y_pred = svclassifier.predict(X_test)
-
-print('Results:')
-print(confusion_matrix(y_test, y_pred))
-print(classification_report(y_test, y_pred))
-
-from sklearn.neighbors import KNeighborsClassifier  
-
-print('Fitting the model..(KNN)')
-classifier = KNeighborsClassifier(n_neighbors=5)  
-classifier.fit(X_train, y_train)  
-y_pred = classifier.predict(X_test)  
-
-print('Results:')
-print(confusion_matrix(y_test, y_pred))
-print(classification_report(y_test, y_pred))
-
-
-
-
 
 
 # END

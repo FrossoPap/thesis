@@ -24,7 +24,7 @@ import logging
 import time
 import numpy as np
 from numpy import array, dot, ones, sqrt
-from scipy.linalg import pinv
+from scipy.linalg import pinv, inv
 from numpy.random import rand
 from sktensor import * 
 from sktensor.core import nvecs, norm
@@ -44,81 +44,10 @@ __all__ = [
 ]
 
 
-def als(X, rank, **kwargs):
+def als(X, Yl, rank, **kwargs):
     """
-    Alternating least-sqaures algorithm to compute the CP decomposition.
-
-    Parameters
-    ----------
-    X : tensor_mixin
-        The tensor to be decomposed.
-    rank : int
-        Tensor rank of the decomposition.
-    init : {'random', 'nvecs'}, optional
-        The initialization method to use.
-            - random : Factor matrices are initialized randomly.
-            - nvecs : Factor matrices are initialzed via HOSVD.
-        (default 'nvecs')
-    max_iter : int, optional
-        Maximium number of iterations of the ALS algorithm.
-        (default 500)
-    fit_method : {'full', None}
-        The method to compute the fit of the factorization
-            - 'full' : Compute least-squares fit of the dense approximation of.
-                       X and X.
-            - None : Do not compute the fit of the factorization, but iterate
-                     until ``max_iter`` (Useful for large-scale tensors).
-        (default 'full')
-    conv : float
-        Convergence tolerance on difference of fit between iterations
-        (default 1e-5)
-
-    Returns
-    -------
-    P : ktensor
-        Rank ``rank`` factorization of X. ``P.U[i]`` corresponds to the factor
-        matrix for the i-th mode. ``P.lambda[i]`` corresponds to the weight
-        of the i-th mode.
-    fit : float
-        Fit of the factorization compared to ``X``
-    itr : int
-        Number of iterations that were needed until convergence
-    exectimes : ndarray of floats
-        Time needed for each single iteration
-
-    Examples
-    --------
-    Create random dense tensor
-
-    >>> from sktensor import dtensor, ktensor
-    >>> U = [np.random.rand(i,3) for i in (20, 10, 14)]
-    >>> T = dtensor(ktensor(U).toarray())
-
-    Compute rank-3 CP decomposition of ``T`` with ALS
-
-    >>> P, fit, itr, _ = als(T, 3)
-
-    Result is a decomposed tensor stored as a Kruskal operator
-
-    >>> type(P)
-    <class 'sktensor.ktensor.ktensor'>
-
-    Factorization should be close to original data
-
-    >>> np.allclose(T, P.totensor())
-    True
-
-    References
-    ----------
-    .. [1] Kolda, T. G. & Bader, B. W.
-           Tensor Decompositions and Applications.
-           SIAM Rev. 51, 455–500 (2009).
-    .. [2] Harshman, R. A.
-           Foundations of the PARAFAC procedure: models and conditions for an 'explanatory' multimodal factor analysis.
-           UCLA Working Papers in Phonetics 16, (1970).
-    .. [3] Carroll, J. D.,  Chang, J. J.
-           Analysis of individual differences in multidimensional scaling via an N-way generalization of 'Eckart-Young' decomposition.
-           Psychometrika 35, 283–319 (1970).
+    Alternating least-sqaures algorithm to compute the CP decomposition taking into 
+    consideration the labels of the set
     """
 
     # init options
@@ -132,20 +61,35 @@ def als(X, rank, **kwargs):
 
     N = X.ndim
     normX = norm(X)
-
+    Yl = np.asarray(Yl)
+    Yl = np.reshape(Yl, (-1,1))
+    normYl = np.linalg.norm(Yl)
     U = _init(ainit, X, N, rank, dtype)
     fit = 0
     exectimes = []
+
+    # Initialize W 
+    W = ones((rank,1), dtype=dtype)
+    
     for itr in range(maxiter):
         tic = time.clock()
         fitold = fit
-
+        
         for n in range(N):
             Unew = X.uttkrp(U, n)
             Y = ones((rank, rank), dtype=dtype)
             for i in (list(range(n)) + list(range(n + 1, N))):
                 Y = Y * dot(U[i].T, U[i])
-            Unew = Unew.dot(pinv(Y))
+            if n!=1:
+                # Updates remain the same for U0,U2
+                Unew = Unew.dot(pinv(Y))
+            else:
+                WWt = dot(W, W.T)
+                YWt = Yl.dot(W.T)
+                # New update for U1
+                H1 = Unew + YWt 
+                H2 = inv(Y+WWt)
+                Unew = dot(H1,H2)
             # Normalize
             if itr == 0:
                 lmbda = sqrt((Unew ** 2).sum(axis=0))
@@ -154,23 +98,39 @@ def als(X, rank, **kwargs):
                 lmbda[lmbda < 1] = 1
             U[n] = Unew / lmbda
 
+
         P = ktensor(U, lmbda)
+        
+        # Update W
+        L1 = inv(dot(U[1].T,U[1]))
+        L2 = dot(U[1].T,Yl)
+        W = dot(L1,L2)
+        BW = dot(U[1],W) 
+        normBW = np.linalg.norm(BW)
+        ypred = BW
+        ypred = np.asarray(ypred)
         if fit_method == 'full':
-            normresidual = normX ** 2 + P.norm() ** 2 - 2 * P.innerprod(X)
+            normresidual1 = normX ** 2 + P.norm() ** 2 - 2 * P.innerprod(X)
+            normresidual2 = normYl ** 2 + normBW ** 2 - 2 * dot(Yl.T,BW)
+            normresidual = normresidual1 + normresidual2
             fit = 1 - (normresidual / normX ** 2)
         else:
             fit = itr
+
         fitchange = abs(fitold - fit)
+        print('fitchange:',fitchange)
         exectimes.append(time.clock() - tic)
-        print('fitchange:', fitchange)
-        _log.debug(
-            '[%3d] fit: %.5f | delta: %7.1e | secs: %.5f' %
-            (itr, fit, fitchange, exectimes[-1])
-        )
+        #_log.debug(
+        #    '[%3d] fit: %.5f | delta: %7.1e | secs: %.5f' %
+        #    (itr, fit, fitchange, exectimes[-1])
+        #)
         if itr > 0 and fitchange < conv:
             break
-
-    return P, fit, itr, array(exectimes)
+    print(ypred)
+    ypred[abs(ypred) > 0.5] = 1
+    ypred[abs(ypred) < 0.5] = 0 
+    print(ypred)
+    return P, ypred, fit, itr, array(exectimes)
 
 
 def opt(X, rank, **kwargs):

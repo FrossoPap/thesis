@@ -118,7 +118,7 @@ print('Densifying X tensor..')
 T1 = dtensor(X)
 print('Shape of tensor:', tf.shape(T1))
 
-rnk = 25 
+rnk = 45 
 print('Rank is:', rnk)  
 print(T1.shape[0], T1.shape[1], T1.shape[2])
 print('CP decomposition for tensor..')
@@ -148,23 +148,29 @@ from foldin import *
 X_test = coo_matrix((48, rnk), dtype=np.int8).toarray()
 
 print('Folding in...')
-
+print('FAKE')
 for j in range(24):
-  print('Add fake test post no:', 96+j,'in line',j)	
+  #print('Add fake test post no:', 96+j,'in line',j)	
   for i in range(len(musers)):
     Xnew[i][0][:] = faketnsr[i][96+j][:]
   Xnew = dtensor(Xnew)
   Unew, Pnew = fold_in(Xnew, P1.U, rnk, init='random') 
+  where_are_NaNs = isnan(Unew)
+  Unew[where_are_NaNs] = 0 
+  print(Unew)
   X_test[j] = Unew
-
-for k in range(24):
-  print('Add real test post no:', 96+k, 'in line:', 24+k)
+  
+print('REAL')
+for kk in range(24):
+  #print('Add real test post no:', 96+k, 'in line:', 24+k)
   for i in range(len(musers)):
-    Xnew[i][0][:] = realtnsr[i][96+k][:]
+    Xnew[i][0][:] = realtnsr[i][96+kk][:]
   Xnew = dtensor(Xnew)
   Unew, Pnew = fold_in(Xnew, P1.U, rnk, init='random')
-  X_test[24+k] = Unew
-
+  where_are_NaNs = isnan(Unew)
+  Unew[where_are_NaNs] = 0
+  X_test[24+kk] = Unew
+  print(Unew)
 '''
 print('Number of labels:', len(y))
 # X holds the feature matrix (240 x rnk) 
@@ -172,14 +178,16 @@ print('Creating Train and Test Sets..')
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.20, random_state=42) 
 '''
 
-print('Y_test:', y_test)
 print('Fitting the model..(Sigmoid SVM Kernel)')
 svclassifier = SVC(kernel='sigmoid')  
 svclassifier.fit(X_train, y_train)  
 y_pred = svclassifier.predict(X_test)  
-
+print(y_test)
+print(y_pred)
 print('Results:')
-print(confusion_matrix(y_test, y_pred))  
+#print(confusion_matrix(y_test, y_pred, labels=np.unique(y_pred)))  
+#print(classification_report(y_test, y_pred, labels=np.unique(y_pred)))
+print(confusion_matrix(y_test, y_pred))
 print(classification_report(y_test, y_pred))
 
 print('Fitting the model..(Gaussian SVM Kernel)')
@@ -188,8 +196,8 @@ svclassifier.fit(X_train, y_train)
 y_pred = svclassifier.predict(X_test)  
 
 print('Results:')
-print(confusion_matrix(y_test, y_pred))  
-print(classification_report(y_test, y_pred))  
+print(confusion_matrix(y_test, y_pred))
+print(classification_report(y_test, y_pred))
 
 
 print('Fitting the model..(LINEAR SVM Kernel)')
