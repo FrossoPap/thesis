@@ -105,28 +105,26 @@ def als(X, Yl, rank, **kwargs):
             U[n] = Unew / lmbda
         
         # update W 
-        BtDt = dot(U[1].T,D.T)
-        DB = dot(D,U[1])
-        inv1 = inv(dot(BtDt,DB))
-        dot2 = dot(BtDt,Yl)
+        AtDt = dot(U[1].T,D.T)
+        DA = dot(D,U[1])
+        inv1 = inv(dot(AtDt,DA))
+        dot2 = dot(AtDt,Yl)
         W = dot(inv1,dot2)
-        print('ok W')
 
         P = ktensor(U, lmbda)
         A = U[1]
         Ai = A[l:]
-        print('Ai shape:', Ai.shape)
 
         ypred = dot(Ai, W)
-        print('ypred shape:', ypred.shape)
-        print(ypred)
         ypred[abs(ypred) > 0.5] = 1
         ypred[abs(ypred) < 0.5] = 0
-        DBW = dot(DB,W)        
-        normDBW = np.linalg.norm(DBW)
+        
+        DAW = dot(DA,W)        
+        normDAW = np.linalg.norm(DAW)
+        
         if fit_method == 'full':
             normresidual1 = normX ** 2 + P.norm() ** 2 - 2 * P.innerprod(X)
-            normresidual2 = normYl ** 2 + normDBW ** 2 - 2 * dot(Yl.T,DBW)
+            normresidual2 = normYl ** 2 + normDAW ** 2 - 2 * dot(Yl.T,DAW)
             normresidual = normresidual1 + normresidual2
             fit = 1 - (normresidual / normX ** 2)
         else:
@@ -143,7 +141,8 @@ def als(X, Yl, rank, **kwargs):
     ypred[abs(ypred) > 0.5] = 1
     ypred[abs(ypred) < 0.5] = 0 
     print(ypred)
-    return P, ypred, fit, itr, array(exectimes)
+
+    return P, ypred, fit, itr
 
 
 def opt(X, rank, **kwargs):
