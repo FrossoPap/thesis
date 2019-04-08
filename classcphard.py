@@ -29,9 +29,6 @@ from numpy.random import rand
 from sktensor import * 
 from sktensor.core import nvecs, norm
 from sktensor.ktensor import ktensor
-import tensorly as tl
-import tensortools as tt
-from tensortools.operations import unfold as tt_unfold, khatri_rao
 
 _log = logging.getLogger('CP')
 _DEF_MAXITER = 500
@@ -70,17 +67,11 @@ def als(X, Yl, rank, **kwargs):
     U = _init(ainit, X, N, rank, dtype)
     fit = 0
     exectimes = []
-    vecX = np.reshape(X, (np.product(X.shape),))
+    X = np.reshape(X, (np.product(X.shape),))
     print(X.shape)
     # Initialize W 
     W = ones((rank,1), dtype=dtype)
-    C = np.asarray(U[0])
-    l = 192
-    D = np.zeros((l,240))
-    for i in range(l):
-      for j in range(l):
-        if i==j: 
-          D[i,j] = 1 
+    
     for itr in range(maxiter):
         tic = time.clock()
         fitold = fit
@@ -94,56 +85,35 @@ def als(X, Yl, rank, **kwargs):
                 # Updates remain the same for U0,U2
                 Unew = Unew.dot(pinv(Y))
             else:
-                Ip = np.identity(240)
-                IptIp = dot(Ip.T,Ip)
-                GtG = np.kron(Y,IptIp)
-                vecA = np.reshape(U[1], (np.product(U[1].shape),1))
-                GtvecX1 = dot(GtG,vecA)
-
-                L = np.kron(W.T,D)
-                LtL = dot(L.T, L)
-
-                Sum1 = inv(GtG + LtL)
-                dot0 = dot(L.T,Yl)
-                Sum2  = GtvecX1 + dot0
-                vecA = dot(Sum1,Sum2)
-  
-                Unew = np.reshape(vecA, (240,rank))
-  
+                WWt = dot(W, W.T)
+                YWt = Yl.dot(W.T)
+                # New update for U1
+                H1 = Unew + YWt 
+                H2 = inv(Y+WWt)
+                Unew = dot(H1,H2)
             # Normalize
             if itr == 0:
                 lmbda = sqrt((Unew ** 2).sum(axis=0))
             else:
                 lmbda = Unew.max(axis=0)
                 lmbda[lmbda < 1] = 1
-            
             U[n] = Unew / lmbda
-        
-        # update W 
-        BtDt = dot(U[1].T,D.T)
-        DB = dot(D,U[1])
-        inv1 = inv(dot(BtDt,DB))
-        dot2 = dot(BtDt,Yl)
-        W = dot(inv1,dot2)
-        print('ok W')
+
 
         P = ktensor(U, lmbda)
-        A = U[1]
-        Ai = A[192:]
-        print('Ai shape:', Ai.shape)
-
-        ypred = dot(Ai, W)
-        print('ypred shape:', ypred.shape)
-        print(ypred)
-        ypred[abs(ypred) > 0.5] = 1
-        ypred[abs(ypred) < 0.5] = 0
-        DBW = dot(DB,W)        
-        normDBW = np.linalg.norm(DBW)
+        
+        # Update W
+        L1 = inv(dot(U[1].T,U[1]))
+        L2 = dot(U[1].T,Yl)
+        W = dot(L1,L2)
+        BW = dot(U[1],W) 
+        normBW = np.linalg.norm(BW)
+        ypred = BW
+        ypred = np.asarray(ypred)
         if fit_method == 'full':
             normresidual1 = normX ** 2 + P.norm() ** 2 - 2 * P.innerprod(X)
-            normresidual2 = normYl ** 2 + normDBW ** 2 - 2 * dot(Yl.T,DBW)
+            normresidual2 = normYl ** 2 + normBW ** 2 - 2 * dot(Yl.T,BW)
             normresidual = normresidual1 + normresidual2
-            normresidual = normresidual1
             fit = 1 - (normresidual / normX ** 2)
         else:
             fit = itr
@@ -156,7 +126,6 @@ def als(X, Yl, rank, **kwargs):
         #    (itr, fit, fitchange, exectimes[-1])
         #)
         if itr > 0 and fitchange < conv:
-            print(ypred)
             break
     print(ypred)
     ypred[abs(ypred) > 0.5] = 1
@@ -185,10 +154,17 @@ def _init(init, X, N, rank, dtype):
     """
     Initialization for CP models
     """
-    #Uinit = [None for _ in range(N)]
     Uinit = [None for _ in range(N)]
-    for n in range(1, N):
+    if isinstance(init, list):
+        Uinit = init
+    elif init == 'random':
+        for n in range(1, N):
             Uinit[n] = array(rand(X.shape[n], rank), dtype=dtype)
+    elif init == 'nvecs':
+        for n in range(1, N):
+            Uinit[n] = array(nvecs(X, n, rank), dtype=dtype)
+    else:
+        raise 'Unknown option (init=%s)' % str(init)
     return Uinit
 
 # vim: set et:

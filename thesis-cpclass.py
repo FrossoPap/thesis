@@ -136,13 +136,19 @@ print('Shape of tensor:', tf.shape(T1))
 
 print('Creating label array, 1 means fake, 0 means real..')
 y_train = []
-for i in range(120):
+# 96 
+for i in range(96):
    y_train.append(1)
    y_train.append(0)
 
+y_test = []
+for i in range(24):
+   y_test.append(1)
+   y_test.append(0)
+
 print('Number of labels:', len(y_train))
 
-rnk = 5
+rnk = 6
 print('Rank is:', rnk)  
 print(T1.shape[0], T1.shape[1], T1.shape[2])
 print('CP-CLASS decomposition for tensor..')
@@ -160,7 +166,6 @@ for j in range(192,240):
    if j%2!=0:
     print(X[j])
 '''
-y_test = y_train
 
 print('Results:')
 print(confusion_matrix(y_test, y_pred))  
