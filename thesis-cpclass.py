@@ -153,7 +153,7 @@ print('Rank is:', rnk)
 print(T1.shape[0], T1.shape[1], T1.shape[2])
 print('CP-CLASS decomposition for tensor..')
 
-P1, y_pred, fit1, itr1, exectimes1 = cp_als(T1, y_train, rnk, init='random')
+P1, y_pred, fit1, itr1 = cp_als(T1, y_train, rnk, init='random')
 
 '''
 X = P1.U[1]
