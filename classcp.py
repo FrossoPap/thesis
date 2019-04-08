@@ -1,24 +1,5 @@
-# coding: utf-8
-# Copyright (C) 2013 Maximilian Nickel <mnick@mit.edu>
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-This module holds diffent algorithms to compute the CP decomposition, i.e.
-algorithms where
-
-.. math:: \\ten{X} \\approx \sum_{r=1}^{rank} \\vec{u}_r^{(1)} \outer \cdots \outer \\vec{u}_r^{(N)}
-
+This module holds diffent algorithms to compute the CP-CLASS decomposition.
 """
 import logging
 import time
@@ -51,6 +32,8 @@ def als(X, Yl, rank, **kwargs):
     """
     Alternating least-sqaures algorithm to compute the CP decomposition taking into 
     consideration the labels of the set
+    Yl -> lx1
+    X -> pxuxu
     """
 
     # init options
@@ -64,29 +47,31 @@ def als(X, Yl, rank, **kwargs):
 
     N = X.ndim
     normX = norm(X)
+    
     Yl = np.asarray(Yl)
     Yl = np.reshape(Yl, (-1,1))
     normYl = np.linalg.norm(Yl)
+    
     U = _init(ainit, X, N, rank, dtype)
     fit = 0
-    exectimes = []
+    
     vecX = np.reshape(X, (np.product(X.shape),))
-    print(X.shape)
-    # Initialize W 
+    
     W = ones((rank,1), dtype=dtype)
-    C = np.asarray(U[0])
-    l = 192
-    D = np.zeros((l,240))
+    
+    l = Yl.shape[0]
+    p = 240
+    D = np.zeros((l,p))
     for i in range(l):
       for j in range(l):
         if i==j: 
           D[i,j] = 1 
+    
     for itr in range(maxiter):
-        tic = time.clock()
         fitold = fit
-        
         for n in range(N):
             Unew = X.uttkrp(U, n)
+            # Y is ZtZ
             Y = ones((rank, rank), dtype=dtype)
             for i in (list(range(n)) + list(range(n + 1, N))):
                 Y = Y * dot(U[i].T, U[i])
@@ -94,7 +79,7 @@ def als(X, Yl, rank, **kwargs):
                 # Updates remain the same for U0,U2
                 Unew = Unew.dot(pinv(Y))
             else:
-                Ip = np.identity(240)
+                Ip = np.identity(p)
                 IptIp = dot(Ip.T,Ip)
                 GtG = np.kron(Y,IptIp)
                 vecA = np.reshape(U[1], (np.product(U[1].shape),1))
@@ -108,7 +93,7 @@ def als(X, Yl, rank, **kwargs):
                 Sum2  = GtvecX1 + dot0
                 vecA = dot(Sum1,Sum2)
   
-                Unew = np.reshape(vecA, (240,rank))
+                Unew = np.reshape(vecA, (p,rank))
   
             # Normalize
             if itr == 0:
@@ -129,7 +114,7 @@ def als(X, Yl, rank, **kwargs):
 
         P = ktensor(U, lmbda)
         A = U[1]
-        Ai = A[192:]
+        Ai = A[l:]
         print('Ai shape:', Ai.shape)
 
         ypred = dot(Ai, W)
@@ -143,21 +128,17 @@ def als(X, Yl, rank, **kwargs):
             normresidual1 = normX ** 2 + P.norm() ** 2 - 2 * P.innerprod(X)
             normresidual2 = normYl ** 2 + normDBW ** 2 - 2 * dot(Yl.T,DBW)
             normresidual = normresidual1 + normresidual2
-            normresidual = normresidual1
             fit = 1 - (normresidual / normX ** 2)
         else:
             fit = itr
 
         fitchange = abs(fitold - fit)
         print('fitchange:',fitchange)
-        exectimes.append(time.clock() - tic)
-        #_log.debug(
-        #    '[%3d] fit: %.5f | delta: %7.1e | secs: %.5f' %
-        #    (itr, fit, fitchange, exectimes[-1])
-        #)
+
         if itr > 0 and fitchange < conv:
             print(ypred)
             break
+    
     print(ypred)
     ypred[abs(ypred) > 0.5] = 1
     ypred[abs(ypred) < 0.5] = 0 
