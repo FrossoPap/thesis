@@ -140,13 +140,19 @@ print('Creating label array, 1 means fake, 0 means real..')
 # iterator for percentage
 w = 0 
 
+tst = int(91*45/100)
+y_test = []
+for i in range(tst):
+  y_test.append(1)
+  y_test.append(0)
+
 # up to 50%
 for t in range(10):
   w = w + 5 
   percent = w /100
   # 182 posts in total
   tr = int(91*percent)
-  tst = 91 - tr
+  #tst = 91 - tr
   print('Percent:', percent, '%', 'Train set size:', 2*tr, 'Test set size:', 2*tst)
 
   y_train = []
@@ -154,21 +160,14 @@ for t in range(10):
      y_train.append(1)
      y_train.append(0)
 
-  y_test = []
-  for i in range(tst):
-     y_test.append(1)
-     y_test.append(0)
-
-  #print('Number of labels:', len(y_train))
-
-  rnk = 5
+  rnk = 10
   #print('Rank is:', rnk)  
   #print(T1.shape[0], T1.shape[1], T1.shape[2])
   #print('CP-CLASS decomposition for tensor..')
   
   # 10 runs
   for i in range(10):
-     P1, W, y_pred, fit1, itr1 = cp_als(T1, y_train, rnk, init='nvecs')
+     P1, y_pred, fit1, itr1 = cp_als(T1, y_train, rnk, init='nvecs')
      print('Results for percent', percent, '% and iteration', i)
      #print(confusion_matrix(y_test, y_pred))  
      print(classification_report(y_test, y_pred))
