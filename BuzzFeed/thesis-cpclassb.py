@@ -160,7 +160,7 @@ for t in range(10):
      y_train.append(1)
      y_train.append(0)
 
-  rnk = 10
+  rnk = 5
   #print('Rank is:', rnk)  
   #print(T1.shape[0], T1.shape[1], T1.shape[2])
   #print('CP-CLASS decomposition for tensor..')

@@ -113,7 +113,7 @@ print('Densifying X tensor..')
 T1 = dtensor(X)
 print('Shape of tensor:', tf.shape(T1))
 
-rnk = 5
+rnk = 10 
 print('Rank is:', rnk)  
 print(T1.shape[0], T1.shape[1], T1.shape[2])
 print('CP decomposition for tensor..')
