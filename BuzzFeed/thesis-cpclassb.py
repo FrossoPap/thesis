@@ -136,29 +136,43 @@ T1 = dtensor(X)
 print('Shape of tensor:', tf.shape(T1))
 
 print('Creating label array, 1 means fake, 0 means real..')
-y_train = []
-# 96 
-for i in range(73):
-   y_train.append(1)
-   y_train.append(0)
 
-y_test = []
-for i in range(18):
-   y_test.append(1)
-   y_test.append(0)
+# iterator for percentage
+w = 0 
 
-print('Number of labels:', len(y_train))
+# up to 50%
+for t in range(10):
+  w = w + 5 
+  percent = w /100
 
-rnk = 3
-print('Rank is:', rnk)  
-print(T1.shape[0], T1.shape[1], T1.shape[2])
-print('CP-CLASS decomposition for tensor..')
+  tr = int(120*percent)
+  tst = 120 - tr
+  print('Percent:', percent, '%', 'Train set size:', 2*tr, 'Test set size:', 2*tst)
 
-for i in range(10):
-   P1, y_pred, fit1, itr1 = cp_als(T1, y_train, rnk, init='random')
-   print('Results:')
-   print(confusion_matrix(y_test, y_pred))  
-   print(classification_report(y_test, y_pred))
+  y_train = []
+  for i in range(tr):
+     y_train.append(1)
+     y_train.append(0)
+
+  y_test = []
+  for i in range(tst):
+     y_test.append(1)
+     y_test.append(0)
+
+  #print('Number of labels:', len(y_train))
+
+  rnk = 5
+  #print('Rank is:', rnk)  
+  #print(T1.shape[0], T1.shape[1], T1.shape[2])
+  #print('CP-CLASS decomposition for tensor..')
+  
+  # 10 runs
+  for i in range(10):
+     P1, W, y_pred, fit1, itr1 = cp_als(T1, y_train, rnk, init='nvecs')
+     print('Results for percent', percent, '% and iteration', i)
+     #print(confusion_matrix(y_test, y_pred))  
+     print(classification_report(y_test, y_pred))
+
 
 
 # END
