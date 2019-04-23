@@ -108,10 +108,10 @@ def als(X, Yl, rank, **kwargs):
         AtDt = dot(U[1].T,D.T)
         DA = dot(D,U[1])
         inv1 = inv(dot(AtDt,DA))
-        print('ok inv')
+        #print('ok inv')
         dot2 = dot(AtDt,Yl)
         W = dot(inv1,dot2)
-
+        
         P = ktensor(U, lmbda)
         A = U[1]
         Ai = A[l:]

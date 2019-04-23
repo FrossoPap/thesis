@@ -140,7 +140,7 @@ print('Creating label array, 1 means fake, 0 means real..')
 # iterator for percentage
 w = 0 
 
-tst = int(91*45/100)
+tst = int(91*50/100)
 y_test = []
 for i in range(tst):
   y_test.append(1)
