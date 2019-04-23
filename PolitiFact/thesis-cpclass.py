@@ -137,25 +137,26 @@ print('Shape of tensor:', tf.shape(T1))
 
 #print('Creating label array, 1 means fake, 0 means real..')
 
-w = 0 
+w = 0
+
+y_test = []
+tst = int(120*20/100)
+for i in range(tst):
+  y_test.append(1)
+  y_test.append(0)
 
 for t in range(10):
   w = w + 5 
   percent = w /100
 
   tr = int(120*percent)
-  tst = 120 - tr
+  #tst = 120 - tr
   print('Percent:', percent, '%', 'Train set size:', 2*tr, 'Test set size:', 2*tst)
 
   y_train = []
   for i in range(tr):
      y_train.append(1)
      y_train.append(0)
-
-  y_test = []
-  for i in range(tst):
-     y_test.append(1)
-     y_test.append(0)
 
   #print('Number of labels:', len(y_train))
 

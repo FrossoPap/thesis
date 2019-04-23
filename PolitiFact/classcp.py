@@ -83,7 +83,7 @@ def als(X, Yl, rank, **kwargs):
                 IptIp = dot(Ip.T,Ip)
                 GtG = np.kron(Y,IptIp)
                 vecA = np.reshape(U[1], (np.product(U[1].shape),1))
-                print('vecA shape', vecA.shape)
+                #print('vecA shape', vecA.shape)
                 GtvecX1 = dot(GtG,vecA)
 
                 L = np.kron(W.T,D)
