@@ -25,7 +25,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
 from sklearn.metrics import classification_report, confusion_matrix
 import tensorflow as tf
-from classcpb import als as cp_als
+from cpb import als as cp_als
 
 print('Creating Post-User and User-User arrays..')
 post = np.loadtxt('BuzzFeedNewsUser.txt' )
@@ -37,7 +37,6 @@ print('Counting number of users with more than one interaction..')
 flag = 0
 u = 0 
 musers = []
-
 for i in range(22778):
     if (post[i,1]==post[i+1,1]) or post[i,2]>2:
       if flag==1:
@@ -91,27 +90,6 @@ for i in range(rows):
        else:
           realtnsr[indx][p-1][:]=total[indx][:]
 
-'''       
-# No sorting needed
-print('Loading sorted by date fake & real posts created in mergefake.py & mergereal.py..')
-sortedfake = np.loadtxt('sortedfakeposts.txt')
-sortedfake = sortedfake.astype(int)
-sortedreal = np.loadtxt('sortedrealposts.txt')
-sortedreal = sortedreal.astype(int)
-
-
-print('Sorting tensors by date according to sortedfake & sortedreal arrays..')
-i=0
-for i in range(120):
-    #print('row from initial:', sortedfake[i]-1)
-    for j in range(len(musers)):
-      sortedfaketnsr[j][i][:]=faketnsr[j][sortedfake[i]-1][:]
-      
-for i in range(120):
-    #print('row from initial:', sortedreal[i]-1)
-    for j in range(len(musers)):
-      sortedrealtnsr[j][i][:]=realtnsr[j][sortedreal[i]-1][:]
-'''
 
 # CP Decomposition
 print('Merging Real and Fake Sets, 182 posts (rows) and', len(musers), 'users (slices) in total..')
@@ -135,43 +113,46 @@ print('Densifying X tensor..')
 T1 = dtensor(X)
 print('Shape of tensor:', tf.shape(T1))
 
+rnk = 5
+print('Rank is:', rnk)  
+print(T1.shape[0], T1.shape[1], T1.shape[2])
+print('CP decomposition for tensor..')
+
 print('Creating label array, 1 means fake, 0 means real..')
+y = []
+for i in range(91):
+   y.append(1)
+   y.append(0)
 
-# iterator for percentage
-w = 0 
+for i in range(10):
+   P1, fit1, itr1, exectimes1 = cp_als(T1, rnk, init='random')
+   X = P1.U[1]
+   X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.20, shuffle=False)
 
-# up to 50%
-for t in range(10):
-  w = w + 5 
-  percent = w /100
-  # 182 posts in total
-  tr = int(91*percent)
-  tst = 91 - tr
-  print('Percent:', percent, '%', 'Train set size:', 2*tr, 'Test set size:', 2*tst)
+   print('LINEAR SVM Kernel')
+   svclassifier = SVC(kernel='linear')
+   svclassifier.fit(X_train, y_train)
+   y_pred = svclassifier.predict(X_test)
 
-  y_train = []
-  for i in range(tr):
-     y_train.append(1)
-     y_train.append(0)
+   print('Results:')
+   print(confusion_matrix(y_test, y_pred))
+   print(classification_report(y_test, y_pred))
+   acc = accuracy_score(y_test, y_pred, normalize=False)
+   print('Accuracy:', acc)
 
-  y_test = []
-  for i in range(tst):
-     y_test.append(1)
-     y_test.append(0)
+   from sklearn.neighbors import KNeighborsClassifier  
 
-  #print('Number of labels:', len(y_train))
+   print('KNN')
+   classifier = KNeighborsClassifier(n_neighbors=5)  
+   classifier.fit(X_train, y_train)  
+   y_pred = classifier.predict(X_test)  
 
-  rnk = 5
-  #print('Rank is:', rnk)  
-  #print(T1.shape[0], T1.shape[1], T1.shape[2])
-  #print('CP-CLASS decomposition for tensor..')
-  
-  # 10 runs
-  for i in range(10):
-     P1, W, y_pred, fit1, itr1 = cp_als(T1, y_train, rnk, init='nvecs')
-     print('Results for percent', percent, '% and iteration', i)
-     #print(confusion_matrix(y_test, y_pred))  
-     print(classification_report(y_test, y_pred))
+   print('Results:')
+   print(confusion_matrix(y_test, y_pred))
+   print(classification_report(y_test, y_pred))
+   acc = accuracy_score(y_test, y_pred, normalize=False)
+   print('Accuracy:', acc)
+
 
 
 
