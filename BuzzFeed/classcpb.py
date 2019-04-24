@@ -114,7 +114,7 @@ def als(X, Yl, rank, **kwargs):
         
         P = ktensor(U, lmbda)
         A = U[1]
-        Ai = A[l:]
+        Ai = A[146:]
 
         ypred = dot(Ai, W)
         ypred[abs(ypred) > 0.5] = 1
