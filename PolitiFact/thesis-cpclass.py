@@ -137,7 +137,7 @@ print('Shape of tensor:', tf.shape(T1))
 
 #print('Creating label array, 1 means fake, 0 means real..')
 
-w = 5  
+w = 0  
 
 y_test = []
 tst = int(120*20/100)
