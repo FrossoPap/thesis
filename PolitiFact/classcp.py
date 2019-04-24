@@ -172,8 +172,10 @@ def _init(init, X, N, rank, dtype):
     if isinstance(init, list):
         Uinit = init
     elif init == 'random':
+        print('Random Initialization')
         for n in range(1, N):
             Uinit[n] = array(rand(X.shape[n], rank), dtype=dtype)
+        print('Ok init')
     elif init == 'nvecs':
         for n in range(1, N):
             Uinit[n] = array(nvecs(X, n, rank), dtype=dtype)

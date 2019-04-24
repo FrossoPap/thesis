@@ -127,7 +127,7 @@ for i in range(len(musers)):
    for j in range(0,240,2):
     X[i][j][:] = faketnsr[i][k][:]
     X[i][j+1][:] = realtnsr[i][k][:]
-    print('k:', k)
+    #print('k:', k)
     k = k + 1 
 
 print(X[0].shape)
@@ -137,7 +137,7 @@ print('Shape of tensor:', tf.shape(T1))
 
 #print('Creating label array, 1 means fake, 0 means real..')
 
-w = 0
+w = 5  
 
 y_test = []
 tst = int(120*20/100)
@@ -161,12 +161,12 @@ for t in range(10):
   #print('Number of labels:', len(y_train))
 
   rnk = 5
-  #print('Rank is:', rnk)  
+  print('Rank is:', rnk)  
   #print(T1.shape[0], T1.shape[1], T1.shape[2])
   #print('CP-CLASS decomposition for tensor..')
 
   for i in range(10):
-     P1, W, y_pred, fit1, itr1 = cp_als(T1, y_train, rnk, init='nvecs')
+     P1, W, y_pred, fit1, itr1 = cp_als(T1, y_train, rnk, init='random')
      print('Results for percent', percent, '% and iteration', i)
      #print(confusion_matrix(y_test, y_pred))  
      print(classification_report(y_test, y_pred))
