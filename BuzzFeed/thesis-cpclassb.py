@@ -167,7 +167,7 @@ for t in range(10):
   
   # 10 runs
   for i in range(10):
-     P1, y_pred, fit1, itr1 = cp_als(T1, y_train, rnk, init='nvecs')
+     P1, y_pred, fit1, itr1 = cp_als(T1, y_train, rnk, init='random')
      print('Results for percent', percent, '% and iteration', i)
      #print(confusion_matrix(y_test, y_pred))  
      print(classification_report(y_test, y_pred))
